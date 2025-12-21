@@ -22,6 +22,7 @@ const TimingConfig: React.FC = () => {
         color: '#4ade80',
         showTime: true,
         playSound: true,
+        soundType: 'bell',
       },
       {
         id: generateId(),
@@ -30,6 +31,7 @@ const TimingConfig: React.FC = () => {
         color: '#facc15',
         showTime: true,
         playSound: true,
+        soundType: 'chime',
       },
       {
         id: generateId(),
@@ -38,6 +40,7 @@ const TimingConfig: React.FC = () => {
         color: '#ef4444',
         showTime: true,
         playSound: true,
+        soundType: 'alarm',
       },
     ],
   });
@@ -64,21 +67,10 @@ const TimingConfig: React.FC = () => {
           color: '#4ade80',
           showTime: true,
           playSound: true,
+          soundType: 'bell',
         },
       ],
     });
-  };
-
-  // 处理编辑组合
-  const handleEditCombination = (id: string) => {
-    const combination = state.combinations.find((c) => c.id === id);
-    if (combination) {
-      setEditingId(id);
-      setNewCombination({
-        name: combination.name,
-        segments: [...combination.segments],
-      });
-    }
   };
 
   // 处理更新组合
@@ -106,14 +98,10 @@ const TimingConfig: React.FC = () => {
           color: '#4ade80',
           showTime: true,
           playSound: true,
+          soundType: 'bell',
         },
       ],
     });
-  };
-
-  // 处理删除组合
-  const handleDeleteCombination = (id: string) => {
-    dispatch({ type: 'DELETE_COMBINATION', payload: id });
   };
 
   // 处理添加时间段
@@ -129,6 +117,7 @@ const TimingConfig: React.FC = () => {
           color: '#60a5fa',
           showTime: true,
           playSound: true,
+          soundType: 'default',
         },
       ],
     });
@@ -153,75 +142,7 @@ const TimingConfig: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* 组合列表 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {state.combinations.map((combination) => (
-          <div
-            key={combination.id}
-            className="bg-white rounded-lg shadow-md p-4 border border-gray-200"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">
-                {combination.name || '未命名组合'}
-              </h3>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleEditCombination(combination.id)}
-                  className="text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
-                >
-                  编辑
-                </button>
-                <button
-                  onClick={() => {
-                    if (window.confirm('确定要删除这个计时组合吗？')) {
-                      handleDeleteCombination(combination.id);
-                    }
-                  }}
-                  className="text-red-600 hover:text-red-800 px-2 py-1 rounded hover:bg-red-50 transition-colors"
-                >
-                  删除
-                </button>
-              </div>
-            </div>
-
-            {/* 时间段列表 */}
-            <div className="space-y-2">
-              {combination.segments.map((segment) => (
-                <div
-                  key={segment.id}
-                  className="flex items-center space-x-2 p-2 rounded"
-                  style={{ backgroundColor: `${segment.color}20` }}
-                >
-                  <div
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: segment.color }}
-                  />
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">{segment.name}</div>
-                    <div className="text-xs text-gray-600">
-                      {segment.duration} 秒
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {segment.showTime && (
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                        显示时间
-                      </span>
-                    )}
-                    {segment.playSound && (
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                        提示音
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
+    <div className="space-y-6 p-6">
       {/* 添加/编辑组合表单 */}
       <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
@@ -330,8 +251,8 @@ const TimingConfig: React.FC = () => {
                   </div>
 
                   {/* 显示时间和提示音 */}
-                  <div className="flex items-center space-x-4">
-                    <label className="flex items-center space-x-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         checked={segment.showTime}
@@ -343,9 +264,9 @@ const TimingConfig: React.FC = () => {
                         className="rounded text-blue-600 focus:ring-blue-500"
                       />
                       <span className="text-sm text-gray-700">显示时间</span>
-                    </label>
+                    </div>
 
-                    <label className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         checked={segment.playSound}
@@ -357,7 +278,30 @@ const TimingConfig: React.FC = () => {
                         className="rounded text-blue-600 focus:ring-blue-500"
                       />
                       <span className="text-sm text-gray-700">提示音</span>
-                    </label>
+                    </div>
+
+                    {/* 声音类型选择 */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        声音类型
+                      </label>
+                      <select
+                        value={segment.soundType}
+                        onChange={(e) =>
+                          handleUpdateSegment(index, {
+                            soundType: e.target.value as 'default' | 'bell' | 'chime' | 'beep' | 'alarm' | 'custom',
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="default">默认</option>
+                        <option value="bell">铃铛声</option>
+                        <option value="chime">钟声</option>
+                        <option value="beep">提示音</option>
+                        <option value="alarm">警报声</option>
+                        <option value="custom">自定义</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>

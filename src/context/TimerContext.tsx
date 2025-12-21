@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { TimingCombination, Session, TimelineItem } from '../types';
+import { storage } from '../utils/storage';
 
 // 定义动作类型
 type TimerAction =
@@ -17,11 +18,13 @@ type TimerAction =
     }
   | { type: 'ADD_TIMELINE_ITEM'; payload: TimelineItem }
   | { type: 'UPDATE_TIMELINE_ITEM'; payload: TimelineItem }
+  | { type: 'SET_SESSIONS'; payload: Session[] }
   | { type: 'SET_RUNNING'; payload: boolean }
   | { type: 'SET_PAUSED'; payload: boolean }
   | { type: 'UPDATE_ELAPSED_TIME'; payload: number }
   | { type: 'SET_CURRENT_SEGMENT_INDEX'; payload: number }
-  | { type: 'RESET_TIMER' };
+  | { type: 'RESET_TIMER' }
+  | { type: 'TOGGLE_COUNTDOWN_DISPLAY' };
 
 // 定义上下文状态
 interface TimerContextState {
@@ -34,20 +37,10 @@ interface TimerContextState {
   isPaused: boolean;
   elapsedTime: number;
   currentSegmentIndex: number;
+  showCountdown: boolean;
 }
 
-// 初始状态
-const initialState: TimerContextState = {
-  combinations: [],
-  sessions: [],
-  currentCombination: null,
-  currentSession: null,
-  timeline: [],
-  isRunning: false,
-  isPaused: false,
-  elapsedTime: 0,
-  currentSegmentIndex: 0,
-};
+
 
 // 创建上下文
 const TimerContext = createContext<{
@@ -99,6 +92,7 @@ const timerReducer = (
         isPaused: false,
         elapsedTime: 0,
         currentSegmentIndex: 0,
+        showCountdown: true,
       };
     case 'END_SESSION':
       return {
@@ -161,6 +155,14 @@ const timerReducer = (
       return { ...state, elapsedTime: action.payload };
     case 'SET_CURRENT_SEGMENT_INDEX':
       return { ...state, currentSegmentIndex: action.payload };
+    case 'TOGGLE_COUNTDOWN_DISPLAY':
+      return { ...state, showCountdown: !state.showCountdown };
+    case 'SET_SESSIONS':
+      return {
+        ...state,
+        sessions: action.payload,
+        currentSession: state.currentSession && action.payload.some(s => s.id === state.currentSession!.id) ? state.currentSession : null,
+      };
     case 'RESET_TIMER':
       return {
         ...state,
@@ -169,17 +171,42 @@ const timerReducer = (
         elapsedTime: 0,
         currentSegmentIndex: 0,
         currentSession: null,
+        showCountdown: true,
       };
     default:
       return state;
-  }
+  };
 };
 
 // 上下文提供者组件
 export const TimerProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [state, dispatch] = useReducer(timerReducer, initialState);
+  // 从localStorage加载初始数据
+  const initialData = {
+    combinations: storage.getCombinations(),
+    sessions: storage.getSessions(),
+    currentCombination: null,
+    currentSession: null,
+    timeline: [],
+    isRunning: false,
+    isPaused: false,
+    elapsedTime: 0,
+    currentSegmentIndex: 0,
+    showCountdown: true,
+  };
+
+  const [state, dispatch] = useReducer(timerReducer, initialData);
+
+  // 监听combinations变化，保存到localStorage
+  useEffect(() => {
+    storage.saveCombinations(state.combinations);
+  }, [state.combinations]);
+
+  // 监听sessions变化，保存到localStorage
+  useEffect(() => {
+    storage.saveSessions(state.sessions);
+  }, [state.sessions]);
 
   return (
     <TimerContext.Provider value={{ state, dispatch }}>

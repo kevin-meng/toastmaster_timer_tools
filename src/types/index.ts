@@ -1,3 +1,6 @@
+// 闹铃声类型
+export type SoundType = 'default' | 'bell' | 'chime' | 'beep' | 'alarm' | 'custom';
+
 // 时间段模型
 export interface TimingSegment {
   id: string;
@@ -6,6 +9,7 @@ export interface TimingSegment {
   color: string;
   showTime: boolean;
   playSound: boolean;
+  soundType: SoundType;
   soundUrl?: string;
 }
 

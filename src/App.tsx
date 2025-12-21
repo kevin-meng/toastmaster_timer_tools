@@ -10,186 +10,376 @@ type Page = 'config' | 'timer' | 'timeline';
 
 function App() {
   // 状态管理：当前页面
-  const [currentPage, setCurrentPage] = useState<Page>('config');
+  const [currentPage, setCurrentPage] = useState<Page>('timer');
   // 状态管理：侧边栏显示
   const [showSidebar, setShowSidebar] = useState(false);
+  // 状态管理：侧边栏是否展开
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  // 状态管理：会话名称和备注
+  const [sessionName, setSessionName] = useState('');
+  const [sessionNotes, setSessionNotes] = useState('');
   
   // 获取计时器上下文
-  const { state } = useTimerContext();
+  const { state, dispatch } = useTimerContext();
   
-  // 监听计时器状态，当开始计时时显示侧边栏
+  // 侧边栏始终显示
   useEffect(() => {
-    if (state.isRunning) {
-      setShowSidebar(true);
-    }
-  }, [state.isRunning]);
+    setShowSidebar(true);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      {/* 导航栏 */}
-      <nav className="bg-white/80 backdrop-blur-md shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Toastmasters Timer
-              </h1>
-            </div>
-            <div className="flex items-center space-x-1">
-              {(['config', 'timer', 'timeline'] as const).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${currentPage === page 
-                    ? 'bg-blue-600 text-white shadow-md' 
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}`}
-                >
-                  {page === 'config' && '计时配置'}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex">
+      {/* 左侧固定可折叠侧边栏 - 加宽设计 */}
+      <aside className={`${sidebarExpanded ? 'w-72' : 'w-20'} bg-white shadow-lg flex flex-col transition-all duration-300 ease-in-out overflow-hidden h-screen fixed left-0 top-0 z-10`}>
+        {/* 侧边栏顶部 */}
+        <div className="p-2 flex items-center justify-between border-b border-gray-100">
+          {/* 标题 - 仅在展开时显示 */}
+          {sidebarExpanded && (
+            <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-wide">
+              头马时间官助手
+            </h1>
+          )}
+          {/* 折叠/展开按钮 */}
+          <button
+            onClick={() => setSidebarExpanded(!sidebarExpanded)}
+            className="p-1 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
+          >
+            {sidebarExpanded ? '◀' : '▶'}
+          </button>
+        </div>
+        
+        {/* 导航菜单 */}
+        <nav className="p-2 space-y-1.5">
+          {(['timer', 'config', 'timeline'] as const).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`w-full ${sidebarExpanded ? 'px-4 py-2.5 text-left' : 'px-4 py-3 justify-center'} rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-3 hover:shadow-md hover:translate-x-0.5 ${currentPage === page 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' 
+                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}`}
+            >
+              {page === 'timer' && (
+                <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                  ▶
+                </div>
+              )}
+              {page === 'config' && (
+                <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                  ⚙
+                </div>
+              )}
+              {page === 'timeline' && (
+                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                  📈
+                </div>
+              )}
+              {/* 菜单项文字 - 仅在展开时显示 */}
+              {sidebarExpanded && (
+                <>
                   {page === 'timer' && '正式计时'}
+                  {page === 'config' && '时间组设置'}
                   {page === 'timeline' && '时间线'}
-                </button>
-              ))}
+                </>
+              )}
+            </button>
+          ))}
+        </nav>
+        
+        {/* 选择计时组合（仅在计时页面且展开时显示） */}
+        {currentPage === 'timer' && sidebarExpanded && (
+          <div className="p-3 space-y-2">
+            <div className="bg-white rounded-xl p-3 space-y-2.5 shadow-md border border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                <div className="w-5 h-5 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                  📝
+                </div>
+                选择计时组合
+              </h3>
+              <div>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all hover:border-gray-300"
+                  onChange={(e) => {
+                    if (e.target.value === 'new') {
+                      setCurrentPage('config');
+                      return;
+                    }
+                    const combination = state.combinations.find((c) => c.id === e.target.value);
+                    if (combination) {
+                      dispatch({ type: 'SET_CURRENT_COMBINATION', payload: combination });
+                    }
+                  }}
+                  value={state.currentCombination?.id || ''}
+                >
+                  <option value="">请选择计时组合</option>
+                  <option value="new" className="text-blue-600 font-medium">
+                    + 创建新的时间组合
+                  </option>
+                  {state.combinations.map((combination) => (
+                    <option key={combination.id} value={combination.id} className="text-sm">
+                      {combination.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all hover:border-gray-300"
+                  placeholder="会话名称"
+                  value={sessionName}
+                  onChange={(e) => setSessionName(e.target.value)}
+                />
+              </div>
+              <div>
+                <textarea
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all resize-y min-h-[50px] max-h-[100px]"
+                  placeholder="备注（可选）"
+                  rows={2}
+                  value={sessionNotes}
+                  onChange={(e) => setSessionNotes(e.target.value)}
+                />
+              </div>
+              
+              {/* 开始计时按钮 - 点击后变灰色，不可点击 */}
+              <button
+                onClick={() => {
+                  if (state.currentCombination) {
+                    // 创建新的会话，使用输入的名称和备注
+                    const newSession = {
+                      id: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+                      name: sessionName.trim() || '未命名会话',
+                      notes: sessionNotes.trim(),
+                      combinationId: state.currentCombination.id,
+                      startTime: new Date(),
+                      createdAt: new Date(),
+                    };
+                    
+                    dispatch({ type: 'START_SESSION', payload: newSession });
+                    setShowSidebar(true);
+                    
+                    // 清空输入框
+                    setSessionName('');
+                    setSessionNotes('');
+                  }
+                }}
+                className="w-full py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm font-medium transform hover:translate-y-[-1px] disabled:translate-y-0"
+                disabled={!state.currentCombination || state.isRunning}
+              >
+                🟢 开始计时
+              </button>
             </div>
           </div>
-        </div>
-      </nav>
-
-      {/* 主要内容 */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
-        <main className="bg-white rounded-xl shadow-xl p-8 transition-all duration-300 hover:shadow-2xl">
-          {/* 页面标题 */}
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            {currentPage === 'config' && '计时组合配置'}
-            {currentPage === 'timer' && '正式计时'}
-            {currentPage === 'timeline' && '时间线记录'}
-          </h2>
-
-          {/* 页面内容 */}
+        )}
+        
+        {/* 时间组合列表（仅在时间设置页面、展开时显示） */}
+        {currentPage === 'config' && sidebarExpanded && (
+          <div className="p-3 overflow-y-auto flex-1 text-sm">
+            <div className="bg-gray-50 rounded-lg p-3 space-y-2.5 shadow-sm">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-semibold text-gray-800">计时组合列表</h3>
+                <button
+                  onClick={() => {
+                    // 可以添加删除所有组合的逻辑
+                  }}
+                  className="text-xs text-red-600 hover:text-red-800"
+                >
+                  删除所有组合
+                </button>
+              </div>
+              
+              {/* 组合列表 */}
+              <div className="space-y-2">
+                {state.combinations.map((combination) => (
+                  <div key={combination.id} className="bg-white rounded-md p-2 shadow-sm border border-gray-100">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-sm font-medium text-gray-800">{combination.name || '未命名组合'}</h4>
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() => {
+                            // 编辑组合逻辑
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          编辑
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm('确定要删除这个计时组合吗？')) {
+                              dispatch({ type: 'DELETE_COMBINATION', payload: combination.id });
+                            }
+                          }}
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          删除
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* 时间段列表 */}
+                    <div className="space-y-1">
+                      {combination.segments.map((segment) => (
+                        <div key={segment.id} className="flex items-center space-x-2 p-1 rounded" style={{ backgroundColor: `${segment.color}20` }}>
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: segment.color }} />
+                          <div className="flex-1 text-xs">
+                            <div className="font-medium">{segment.name}</div>
+                            <div className="text-gray-500">{segment.duration}秒</div>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            {segment.showTime && (
+                              <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">显示时间</span>
+                            )}
+                            {segment.playSound && (
+                              <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">提示音</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* 实时时间线和控制按钮（仅在计时页面、显示且展开时显示） */}
+        {currentPage === 'timer' && showSidebar && sidebarExpanded && (
+          <div className="p-3 overflow-y-auto flex-1 text-sm">
+            <div className="bg-gray-50 rounded-lg p-3 space-y-2.5 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-800">当前会话</h3>
+              {state.currentSession && (
+                <div className="space-y-0.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">名称:</span>
+                    <span className="font-medium">{state.currentSession.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">开始时间:</span>
+                    <span className="font-medium">
+                      {new Date(state.currentSession.startTime).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">持续时间:</span>
+                    <span className="font-medium text-blue-600">
+                      {Math.floor(state.elapsedTime / 60).toString().padStart(2, '0')}:
+                      {(state.elapsedTime % 60).toString().padStart(2, '0')}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {state.currentCombination && state.currentCombination.segments[state.currentSegmentIndex] && (
+                <div className="mt-2 space-y-0.5 text-xs">
+                  <h3 className="text-sm font-semibold text-gray-800">当前时间段</h3>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">名称:</span>
+                    <span className="font-medium">
+                      {state.currentCombination.segments[state.currentSegmentIndex].name}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">剩余时间:</span>
+                    <span className="font-medium text-green-600">
+                      {Math.floor((state.currentCombination.segments[state.currentSegmentIndex].duration - (state.elapsedTime - state.currentCombination.segments.slice(0, state.currentSegmentIndex).reduce((sum, s) => sum + s.duration, 0))) / 60).toString().padStart(2, '0')}:
+                      {(state.currentCombination.segments[state.currentSegmentIndex].duration - (state.elapsedTime - state.currentCombination.segments.slice(0, state.currentSegmentIndex).reduce((sum, s) => sum + s.duration, 0)) % 60).toString().padStart(2, '0')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">颜色:</span>
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: state.currentCombination.segments[state.currentSegmentIndex].color }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* 计时进度 */}
+              {state.currentCombination && (
+                <div className="mt-2 space-y-1.5">
+                  <h3 className="text-sm font-semibold text-gray-800">计时进度</h3>
+                  {state.currentCombination.segments.map((segment, index) => {
+                    const segmentStart = state.currentCombination?.segments.slice(0, index).reduce((sum, s) => sum + s.duration, 0) || 0;
+                    const isCurrent = index === state.currentSegmentIndex;
+                    const isCompleted = index < state.currentSegmentIndex;
+                    
+                    return (
+                      <div key={segment.id} className="space-y-0.5">
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <span>{segment.name}</span>
+                          <span>{segment.duration}秒</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1">
+                          <div
+                            className="h-1 rounded-full transition-all duration-300"
+                            style={{
+                              backgroundColor: segment.color,
+                              width: isCompleted ? '100%' : 
+                                     isCurrent ? `${Math.min(100, ((state.elapsedTime - segmentStart) / segment.duration) * 100)}%` : '0%'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {/* 计时控制按钮 - 移至侧边栏 */}
+              {state.isRunning && (
+                <div className="mt-3 space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-800">计时控制</h3>
+                  <div className="grid grid-cols-1 gap-2">
+                    <button
+                      onClick={() => {
+                        dispatch({ type: 'TOGGLE_COUNTDOWN_DISPLAY' });
+                      }}
+                      className="w-full px-3 py-2 text-xs bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg shadow-sm hover:shadow-md transition-all hover:from-gray-700 hover:to-gray-800"
+                    >
+                      {state.showCountdown ? '隐藏倒计时' : '显示倒计时'}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => dispatch({ type: 'SET_PAUSED', payload: !state.isPaused })}
+                      className="px-3 py-2 text-xs bg-gradient-to-r from-yellow-600 to-amber-600 text-white rounded-lg shadow-sm hover:shadow-md transition-all hover:from-yellow-700 hover:to-amber-700"
+                    >
+                      {state.isPaused ? '继续' : '暂停'}
+                    </button>
+                    <button
+                      onClick={() => dispatch({ type: 'RESET_TIMER' })}
+                      className="px-3 py-2 text-xs bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg shadow-sm hover:shadow-md transition-all hover:from-gray-700 hover:to-gray-800"
+                    >
+                      重置
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (state.currentSession) {
+                          dispatch({ type: 'END_SESSION', payload: { sessionId: state.currentSession.id, endTime: new Date() } });
+                        }
+                      }}
+                      className="px-3 py-2 text-xs bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-lg shadow-sm hover:shadow-md transition-all hover:from-red-700 hover:to-rose-700"
+                    >
+                      结束
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </aside>
+      
+      {/* 右侧主要内容 - 自适应宽度，支持滚动 */}
+      <main className={`flex-1 transition-all duration-300 ${sidebarExpanded ? 'ml-72' : 'ml-20'} overflow-auto`}>
+        {/* 页面内容 - 居中显示，有最大宽度 */}
+        <div className="max-w-6xl mx-auto p-6 w-full">
           {currentPage === 'config' && <TimingConfig />}
           {currentPage === 'timer' && <TimerDisplay />}
           {currentPage === 'timeline' && <Timeline />}
-        </main>
-        
-        {/* 侧边栏时间线弹窗 */}
-        {showSidebar && (
-          <>
-            {/* 移动端背景遮罩 */}
-            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 sm:hidden" onClick={() => setShowSidebar(false)} />
-            
-            {/* 侧边栏 */}
-            <aside className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${showSidebar ? 'translate-x-0' : 'translate-x-full'}
-              ${showSidebar ? 'sm:w-80' : 'sm:w-0'}
-              w-full sm:w-80
-            `}>
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">实时时间线</h3>
-                  <button
-                    onClick={() => setShowSidebar(false)}
-                    className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                
-                {/* 时间线内容 */}
-                <div className="space-y-4 max-h-[calc(100vh-120px)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                  {state.currentSession && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-800 mb-2">当前会话</h4>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">名称:</span>
-                          <span className="font-medium">{state.currentSession.name}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">开始时间:</span>
-                          <span className="font-medium">
-                            {new Date(state.currentSession.startTime).toLocaleTimeString()}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">持续时间:</span>
-                          <span className="font-medium text-blue-600">
-                            {Math.floor(state.elapsedTime / 60).toString().padStart(2, '0')}:
-                            {(state.elapsedTime % 60).toString().padStart(2, '0')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-800 mb-2">当前时间段</h4>
-                    {state.currentCombination && state.currentCombination.segments[state.currentSegmentIndex] && (
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">名称:</span>
-                          <span className="font-medium">
-                            {state.currentCombination.segments[state.currentSegmentIndex].name}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">剩余时间:</span>
-                          <span className="font-medium text-green-600">
-                            {Math.floor((state.currentCombination.segments[state.currentSegmentIndex].duration - (state.elapsedTime - state.currentCombination.segments.slice(0, state.currentSegmentIndex).reduce((sum, s) => sum + s.duration, 0))) / 60).toString().padStart(2, '0')}:
-                            {(state.currentCombination.segments[state.currentSegmentIndex].duration - (state.elapsedTime - state.currentCombination.segments.slice(0, state.currentSegmentIndex).reduce((sum, s) => sum + s.duration, 0)) % 60).toString().padStart(2, '0')}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">颜色:</span>
-                          <div className="flex items-center">
-                            <div
-                              className="w-3 h-3 rounded-full mr-2"
-                              style={{ backgroundColor: state.currentCombination.segments[state.currentSegmentIndex].color }}
-                            />
-                            <span>{state.currentCombination.segments[state.currentSegmentIndex].color}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-800 mb-2">计时进度</h4>
-                    {state.currentCombination && (
-                      <div className="space-y-2">
-                        {state.currentCombination.segments.map((segment, index) => {
-                          const segmentStart = state.currentCombination.segments.slice(0, index).reduce((sum, s) => sum + s.duration, 0);
-                          const segmentEnd = segmentStart + segment.duration;
-                          const isCurrent = index === state.currentSegmentIndex;
-                          const isCompleted = index < state.currentSegmentIndex;
-                          
-                          return (
-                            <div key={segment.id} className="space-y-1">
-                              <div className="flex justify-between text-xs text-gray-600">
-                                <span>{segment.name}</span>
-                                <span>{segment.duration}秒</span>
-                              </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div
-                                  className="h-2 rounded-full transition-all duration-300"
-                                  style={{
-                                    backgroundColor: segment.color,
-                                    width: isCompleted ? '100%' : 
-                                           isCurrent ? `${Math.min(100, ((state.elapsedTime - segmentStart) / segment.duration) * 100)}%` : '0%'
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </aside>
-          </>
-        )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

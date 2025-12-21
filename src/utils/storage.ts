@@ -5,6 +5,7 @@ const STORAGE_KEYS = {
   COMBINATIONS: 'toastmaster_timer_combinations',
   TIMELINE: 'toastmaster_timer_timeline',
   SESSION: 'toastmaster_timer_current_session',
+  SESSIONS: 'toastmaster_timer_sessions',
 };
 
 // 存储工具类
@@ -70,6 +71,34 @@ export const storage = {
       }
     } catch (error) {
       console.error('Failed to save current session to localStorage:', error);
+    }
+  },
+
+  // 会话列表相关方法
+  getSessions(): Session[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.SESSIONS);
+      if (!stored) return [];
+      
+      const sessions = JSON.parse(stored);
+      // 转换日期字符串为Date对象
+      return sessions.map((session: any) => ({
+        ...session,
+        startTime: new Date(session.startTime),
+        endTime: session.endTime ? new Date(session.endTime) : undefined,
+        createdAt: new Date(session.createdAt),
+      }));
+    } catch (error) {
+      console.error('Failed to get sessions from localStorage:', error);
+      return [];
+    }
+  },
+
+  saveSessions(sessions: Session[]): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(sessions));
+    } catch (error) {
+      console.error('Failed to save sessions to localStorage:', error);
     }
   },
 
