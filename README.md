@@ -4,6 +4,8 @@
 
 ![Logo](public/logo.png)
 
+[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/2R838Q)
+
 ## ✨ 主要功能
 
 - **多场景预设**：内置标准的 Toastmasters 计时规则，包括：
