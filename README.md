@@ -4,7 +4,7 @@
 
 ![Logo](public/logo.png)
 
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/2R838Q)
+[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/deploy?template=https://github.com/kevin-meng/toastmaster_timer_tools)
 
 ## ✨ 主要功能
 
