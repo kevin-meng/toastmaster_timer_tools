@@ -4,6 +4,8 @@
 
 ![Logo](public/logo.png)
 
+![Cover](public/cover.jpg)
+
 ## ✨ 主要功能
 
 - **多场景预设**：内置标准的 Toastmasters 计时规则，包括：
