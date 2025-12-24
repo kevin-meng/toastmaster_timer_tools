@@ -4,8 +4,6 @@
 
 ![Logo](public/logo.png)
 
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/deploy?template=https://github.com/kevin-meng/toastmaster_timer_tools)
-
 ## ✨ 主要功能
 
 - **多场景预设**：内置标准的 Toastmasters 计时规则，包括：
@@ -53,6 +51,17 @@ npm run dev
 ```bash
 npm run build
 ```
+
+## ☁️ 部署指南
+
+### 部署到 Zeabur
+
+1. 访问 [Zeabur](https://zeabur.com) 并登录。
+2. 点击控制台中的 **Create Project** (创建项目)。
+3. 点击 **Create Service** (创建服务) -> 选择 **Git**。
+4. 搜索并选择仓库 `toastmaster_timer_tools`。
+5. Zeabur 会自动识别 React/Vite 项目并开始部署。
+6. 部署完成后，在 **Networking** (网络) 标签页绑定一个域名即可访问。
 
 ## 📝 使用指南
 
