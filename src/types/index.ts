@@ -32,6 +32,8 @@ export interface Session {
   endTime?: Date;
   duration?: number; // 总时长（秒）
   createdAt: Date;
+  updatedAt?: Date;
+  deleted?: boolean;
 }
 
 // 时间线项目模型

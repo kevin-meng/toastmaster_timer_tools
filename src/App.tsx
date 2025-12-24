@@ -4,6 +4,8 @@ import TimingConfig from './components/TimingConfig';
 import TimerDisplay from './components/TimerDisplay';
 import Timeline from './components/Timeline';
 import { useTimerContext } from './context/TimerContext';
+import type { TimingCombination } from './types';
+import { DEFAULT_COMBINATIONS } from './constants/defaultCombinations';
 
 // 定义页面类型
 type Page = 'config' | 'timer' | 'timeline';
@@ -15,29 +17,75 @@ function App() {
   const [showSidebar, setShowSidebar] = useState(false);
   // 状态管理：侧边栏是否展开
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  // 状态管理：自定义组合是否展开
+  const [customCombinationsExpanded, setCustomCombinationsExpanded] = useState(true);
+  // 状态管理：默认组合是否展开
+  const [defaultCombinationsExpanded, setDefaultCombinationsExpanded] = useState(true);
   // 状态管理：会话名称和备注
   const [sessionName, setSessionName] = useState('');
   const [sessionNotes, setSessionNotes] = useState('');
+  // 状态管理：正在编辑的组合
+  const [editingCombination, setEditingCombination] = useState<TimingCombination | null>(null);
+  
+  // 状态管理：历史记录筛选范围 - 默认为当前日期 (YYYY-MM-DD)
+  const getCurrentDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const [selectedDate, setSelectedDate] = useState<string>(getCurrentDate());
   
   // 获取计时器上下文
   const { state, dispatch } = useTimerContext();
+  
+  // 计算所有可用的日期列表
+  const availableDates = (() => {
+    const dates = new Set<string>();
+    // 添加当前日期
+    dates.add(getCurrentDate());
+    
+    // 从会话记录中提取日期
+    state.sessions.forEach(session => {
+      const date = new Date(session.startTime);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      dates.add(`${year}-${month}-${day}`);
+    });
+    
+    // 转换为数组并排序（降序）
+    return Array.from(dates).sort((a, b) => b.localeCompare(a));
+  })();
   
   // 侧边栏始终显示
   useEffect(() => {
     setShowSidebar(true);
   }, []);
+  
+  // 当切换到配置页面时，如果有正在编辑的组合，设置编辑状态
+  useEffect(() => {
+    if (currentPage === 'config' && editingCombination) {
+      // 使用dispatch设置当前组合，以便TimingConfig组件可以获取到
+      dispatch({ type: 'SET_CURRENT_COMBINATION', payload: editingCombination });
+    }
+  }, [currentPage, editingCombination, dispatch]);
+  
+  // 处理筛选范围变化
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
       {/* 左侧固定可折叠侧边栏 - 加宽设计 */}
-      <aside className={`${sidebarExpanded ? 'w-72' : 'w-20'} bg-white shadow-lg flex flex-col transition-all duration-300 ease-in-out overflow-hidden h-screen fixed left-0 top-0 z-10`}>
+      <aside className={`${sidebarExpanded ? 'w-72' : 'w-20'} bg-white shadow-xl flex flex-col transition-all duration-300 ease-in-out overflow-hidden h-screen fixed left-0 top-0 z-10 border-r border-gray-100`}>
         {/* 侧边栏顶部 */}
-        <div className="p-2 flex items-center justify-between border-b border-gray-100">
+        <div className="p-4 flex items-center justify-between border-b border-gray-100 h-24">
           {/* 标题 - 仅在展开时显示 */}
           {sidebarExpanded && (
-            <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-wide">
-              头马时间官助手
-            </h1>
+            <img src="/logo.png" alt="头马时间官助手" className="h-16 w-auto object-contain" />
           )}
           {/* 折叠/展开按钮 */}
           <button
@@ -103,7 +151,11 @@ function App() {
                       setCurrentPage('config');
                       return;
                     }
-                    const combination = state.combinations.find((c) => c.id === e.target.value);
+                    // 先从自定义组合中找，再从默认组合中找
+                    const combination = 
+                      state.combinations.find((c) => c.id === e.target.value) || 
+                      DEFAULT_COMBINATIONS.find((c) => c.id === e.target.value);
+                      
                     if (combination) {
                       dispatch({ type: 'SET_CURRENT_COMBINATION', payload: combination });
                     }
@@ -111,14 +163,30 @@ function App() {
                   value={state.currentCombination?.id || ''}
                 >
                   <option value="">请选择计时组合</option>
+                  
+                  {/* 默认时间组合 */}
+                  <optgroup label="默认时间组合">
+                    {DEFAULT_COMBINATIONS.map((combination) => (
+                      <option key={combination.id} value={combination.id} className="text-sm">
+                        {combination.name}
+                      </option>
+                    ))}
+                  </optgroup>
+
+                  {/* 自定义时间组合 */}
+                  <optgroup label="自定义时间组合">
+                    {state.combinations
+                      .filter(c => !DEFAULT_COMBINATIONS.some(dc => dc.id === c.id))
+                      .map((combination) => (
+                        <option key={combination.id} value={combination.id} className="text-sm">
+                          {combination.name}
+                        </option>
+                      ))}
+                  </optgroup>
+
                   <option value="new" className="text-blue-600 font-medium">
                     + 创建新的时间组合
                   </option>
-                  {state.combinations.map((combination) => (
-                    <option key={combination.id} value={combination.id} className="text-sm">
-                      {combination.name}
-                    </option>
-                  ))}
                 </select>
               </div>
               <div>
@@ -179,64 +247,170 @@ function App() {
                 <h3 className="text-sm font-semibold text-gray-800">计时组合列表</h3>
                 <button
                   onClick={() => {
-                    // 可以添加删除所有组合的逻辑
+                    // 只删除自定义组合
+                    const defaultIds = DEFAULT_COMBINATIONS.map(dc => dc.id);
+                    state.combinations.forEach(c => {
+                      if (!defaultIds.includes(c.id)) {
+                        dispatch({ type: 'DELETE_COMBINATION', payload: c.id });
+                      }
+                    });
                   }}
                   className="text-xs text-red-600 hover:text-red-800"
                 >
-                  删除所有组合
+                  删除自定义组合
                 </button>
               </div>
               
-              {/* 组合列表 */}
-              <div className="space-y-2">
-                {state.combinations.map((combination) => (
-                  <div key={combination.id} className="bg-white rounded-md p-2 shadow-sm border border-gray-100">
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-sm font-medium text-gray-800">{combination.name || '未命名组合'}</h4>
-                      <div className="flex space-x-1">
-                        <button
-                          onClick={() => {
-                            // 编辑组合逻辑
-                          }}
-                          className="text-xs text-blue-600 hover:text-blue-800"
-                        >
-                          编辑
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm('确定要删除这个计时组合吗？')) {
-                              dispatch({ type: 'DELETE_COMBINATION', payload: combination.id });
-                            }
-                          }}
-                          className="text-xs text-red-600 hover:text-red-800"
-                        >
-                          删除
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* 时间段列表 */}
-                    <div className="space-y-1">
-                      {combination.segments.map((segment) => (
-                        <div key={segment.id} className="flex items-center space-x-2 p-1 rounded" style={{ backgroundColor: `${segment.color}20` }}>
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: segment.color }} />
-                          <div className="flex-1 text-xs">
-                            <div className="font-medium">{segment.name}</div>
-                            <div className="text-gray-500">{segment.duration}秒</div>
+              {/* 组合列表 - 分为默认和自定义 */}
+              <div className="space-y-4">
+                {/* 默认组合 */}
+                <div>
+                  <button 
+                    onClick={() => setDefaultCombinationsExpanded(!defaultCombinationsExpanded)}
+                    className="w-full flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 hover:bg-gray-100 p-1 rounded transition-colors"
+                  >
+                    <span>默认组合</span>
+                    <span>{defaultCombinationsExpanded ? '▼' : '▶'}</span>
+                  </button>
+                  
+                  {defaultCombinationsExpanded && (
+                    <div className="space-y-2">
+                      {DEFAULT_COMBINATIONS.map((combination) => (
+                          <div key={combination.id} className="bg-white rounded-md p-2 shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-2">
+                              <h4 className="text-sm font-medium text-gray-800">{combination.name}</h4>
+                              <div className="flex space-x-1">
+                                <button
+                                  onClick={() => {
+                                    // 复制组合逻辑
+                                    const copyCombination = {
+                                      ...combination,
+                                      id: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+                                      name: `${combination.name} (复制)`,
+                                      segments: combination.segments.map(segment => ({
+                                        ...segment,
+                                        id: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+                                      })),
+                                      createdAt: new Date(),
+                                      updatedAt: new Date()
+                                    };
+                                    dispatch({ type: 'ADD_COMBINATION', payload: copyCombination });
+                                  }}
+                                  className="text-xs text-green-600 hover:text-green-800"
+                                >
+                                  复制
+                                </button>
+                              </div>
+                            </div>
+                            
+                            {/* 时间段列表 */}
+                            <div className="space-y-1">
+                              {combination.segments.map((segment) => (
+                                <div key={segment.id} className="flex items-center space-x-2 p-1 rounded" style={{ backgroundColor: `${segment.color}20` }}>
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: segment.color }} />
+                                  <div className="flex-1 text-xs">
+                                    <div className="font-medium text-left">{segment.name}</div>
+                                    <div className="text-gray-500 text-left">{segment.duration}秒</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            {segment.showTime && (
-                              <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">显示时间</span>
-                            )}
-                            {segment.playSound && (
-                              <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">提示音</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
-                  </div>
-                ))}
+                  )}
+                </div>
+
+                {/* 自定义组合 - 可折叠 */}
+                <div>
+                  <button 
+                    onClick={() => setCustomCombinationsExpanded(!customCombinationsExpanded)}
+                    className="w-full flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 hover:bg-gray-100 p-1 rounded transition-colors"
+                  >
+                    <span>自定义组合</span>
+                    <span>{customCombinationsExpanded ? '▼' : '▶'}</span>
+                  </button>
+                  
+                  {customCombinationsExpanded && (
+                    <div className="space-y-2">
+                      {state.combinations
+                        .filter(c => !DEFAULT_COMBINATIONS.some(dc => dc.id === c.id))
+                        .map((combination) => (
+                          <div key={combination.id} className="bg-white rounded-md p-2 shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-2">
+                              <h4 className="text-sm font-medium text-gray-800">{combination.name || '未命名组合'}</h4>
+                              <div className="flex space-x-1">
+                                <button
+                                  onClick={() => {
+                                    // 复制组合逻辑
+                                    const copyCombination = {
+                                      ...combination,
+                                      id: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+                                      name: `${combination.name} (复制)`,
+                                      segments: combination.segments.map(segment => ({
+                                        ...segment,
+                                        id: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+                                      })),
+                                      createdAt: new Date(),
+                                      updatedAt: new Date()
+                                    };
+                                    dispatch({ type: 'ADD_COMBINATION', payload: copyCombination });
+                                  }}
+                                  className="text-xs text-green-600 hover:text-green-800"
+                                >
+                                  复制
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    // 编辑组合逻辑
+                                    setEditingCombination(combination);
+                                    setCurrentPage('config');
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-800"
+                                >
+                                  编辑
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (window.confirm('确定要删除这个计时组合吗？')) {
+                                      dispatch({ type: 'DELETE_COMBINATION', payload: combination.id });
+                                    }
+                                  }}
+                                  className="text-xs text-red-600 hover:text-red-800"
+                                >
+                                  删除
+                                </button>
+                              </div>
+                            </div>
+                          
+                            {/* 时间段列表 */}
+                            <div className="space-y-1">
+                              {combination.segments.map((segment) => (
+                                <div key={segment.id} className="flex items-center space-x-2 p-1 rounded" style={{ backgroundColor: `${segment.color}20` }}>
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: segment.color }} />
+                                  <div className="flex-1 text-xs">
+                                    <div className="font-medium text-left">{segment.name}</div>
+                                    <div className="text-gray-500 text-left">{segment.duration}秒</div>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    {segment.showTime && (
+                                      <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">显示时间</span>
+                                    )}
+                                    {segment.playSound && (
+                                      <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">提示音</span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      {state.combinations.filter(c => !DEFAULT_COMBINATIONS.some(dc => dc.id === c.id)).length === 0 && (
+                        <p className="text-xs text-gray-400 italic text-center py-2">暂无自定义组合</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -369,15 +543,48 @@ function App() {
             </div>
           </div>
         )}
+        
+        {/* 历史记录筛选下拉选项（仅在时间线页面、展开时显示） */}
+        {currentPage === 'timeline' && sidebarExpanded && (
+          <div className="p-3 text-sm">
+            <div className="bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <span>📅</span> 历史记录筛选
+              </h3>
+              <div className="relative">
+                <select
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:border-blue-400 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    handleDateChange(e.target.value);
+                    setShowSidebar(true);
+                  }}
+                >
+                  {availableDates.map(date => (
+                    <option key={date} value={date}>
+                      {date}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </aside>
       
       {/* 右侧主要内容 - 自适应宽度，支持滚动 */}
       <main className={`flex-1 transition-all duration-300 ${sidebarExpanded ? 'ml-72' : 'ml-20'} overflow-auto`}>
         {/* 页面内容 - 居中显示，有最大宽度 */}
-        <div className="max-w-6xl mx-auto p-6 w-full">
-          {currentPage === 'config' && <TimingConfig />}
+        <div className="max-w-5xl mx-auto p-6">
+          {/* 根据当前页面渲染不同的组件 */}
           {currentPage === 'timer' && <TimerDisplay />}
-          {currentPage === 'timeline' && <Timeline />}
+          {currentPage === 'config' && <TimingConfig />}
+          {currentPage === 'timeline' && <Timeline selectedDate={selectedDate} />}
         </div>
       </main>
     </div>

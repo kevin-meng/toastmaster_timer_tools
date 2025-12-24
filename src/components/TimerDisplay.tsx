@@ -40,6 +40,29 @@ const TimerDisplay: React.FC = () => {
     return Math.max(0, currentSegment.duration - timeInCurrentSegment);
   };
 
+  // 播放声音函数 - 3个素材对应3个选项
+  const playSound = (soundType: string) => {
+    try {
+      // 声音类型到文件路径的映射 - 3个素材对应3个选项
+      const soundMap: Record<string, string> = {
+        bell: '/sounds/bell.wav',
+        chime: '/sounds/chime.wav',
+        beep: '/sounds/bell_service.wav',
+        alarm: '/sounds/bell_service.wav',
+        default: '/sounds/bell.wav',
+        custom: '/sounds/bell.wav'
+      };
+      
+      // 创建音频对象并播放
+      const audio = new Audio(soundMap[soundType] || soundMap.default);
+      audio.play().catch(err => {
+        console.error('Failed to play sound:', err);
+      });
+    } catch (error) {
+      console.error('Error playing sound:', error);
+    }
+  };
+
   // 计时器逻辑
   useEffect(() => {
     if (state.isRunning && !state.isPaused) {
@@ -61,18 +84,17 @@ const TimerDisplay: React.FC = () => {
             state.currentSegmentIndex <
               state.currentCombination.segments.length - 1
           ) {
+            // 播放当前段结束的提示音
+            const currentSegment = state.currentCombination.segments[state.currentSegmentIndex];
+            if (currentSegment.playSound) {
+              playSound(currentSegment.soundType);
+            }
+            
+            // 切换到下一个时间段
             dispatch({
               type: 'SET_CURRENT_SEGMENT_INDEX',
               payload: state.currentSegmentIndex + 1,
             });
-
-            // 播放提示音（如果启用）
-            const currentSegment =
-              state.currentCombination.segments[state.currentSegmentIndex];
-            if (currentSegment.playSound) {
-              // 这里可以添加播放提示音的逻辑
-              console.log('Playing sound for segment:', currentSegment.name);
-            }
           }
         }
       }, 1000);

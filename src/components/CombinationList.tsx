@@ -5,6 +5,7 @@ interface CombinationListProps {
   combinations: TimingCombination[];
   onEdit: (combination: TimingCombination) => void;
   onDelete: (id: string) => void;
+  onCopy: (combination: TimingCombination) => void;
   onSelect: (combination: TimingCombination) => void;
 }
 
@@ -12,6 +13,7 @@ const CombinationList: React.FC<CombinationListProps> = ({
   combinations,
   onEdit,
   onDelete,
+  onCopy,
   onSelect,
 }) => {
   return (
@@ -39,6 +41,12 @@ const CombinationList: React.FC<CombinationListProps> = ({
                 </div>
                 <div className="flex space-x-2">
                   <button
+                    onClick={() => onCopy(combination)}
+                    className="text-green-500 hover:text-green-700"
+                  >
+                    复制
+                  </button>
+                  <button
                     onClick={() => onEdit(combination)}
                     className="text-blue-500 hover:text-blue-700"
                   >
@@ -62,7 +70,7 @@ const CombinationList: React.FC<CombinationListProps> = ({
                       className="w-3 h-3 rounded-full mr-2"
                       style={{ backgroundColor: segment.color }}
                     ></div>
-                    <span className="text-gray-700">{segment.name}</span>
+                    <span className="text-gray-700 text-left flex-1">{segment.name}</span>
                     <span className="text-gray-500 ml-auto">
                       {segment.duration}s
                     </span>

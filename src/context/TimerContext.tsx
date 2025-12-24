@@ -178,13 +178,15 @@ const timerReducer = (
   };
 };
 
+import { DEFAULT_COMBINATIONS } from '../constants/defaultCombinations';
+
 // 上下文提供者组件
 export const TimerProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   // 从localStorage加载初始数据
   const initialData = {
-    combinations: storage.getCombinations(),
+    combinations: storage.getCombinations().length > 0 ? storage.getCombinations() : DEFAULT_COMBINATIONS,
     sessions: storage.getSessions(),
     currentCombination: null,
     currentSession: null,

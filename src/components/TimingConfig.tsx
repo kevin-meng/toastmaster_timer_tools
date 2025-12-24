@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { TimingCombination, TimingSegment } from '../types';
+import type { TimingCombination, TimingSegment, SoundType } from '../types';
 import { useTimerContext } from '../context/TimerContext';
 
 // 生成唯一ID的辅助函数
@@ -20,7 +20,7 @@ const TimingConfig: React.FC = () => {
         name: '准备时间',
         duration: 60,
         color: '#4ade80',
-        showTime: true,
+        showTime: false,
         playSound: true,
         soundType: 'bell',
       },
@@ -29,7 +29,7 @@ const TimingConfig: React.FC = () => {
         name: '正式时间',
         duration: 120,
         color: '#facc15',
-        showTime: true,
+        showTime: false,
         playSound: true,
         soundType: 'chime',
       },
@@ -38,12 +38,26 @@ const TimingConfig: React.FC = () => {
         name: '警告时间',
         duration: 30,
         color: '#ef4444',
-        showTime: true,
+        showTime: false,
         playSound: true,
-        soundType: 'alarm',
+        soundType: 'beep',
       },
     ],
   });
+
+  // 监听currentCombination变化，自动填充表单用于编辑
+  React.useEffect(() => {
+    if (state.currentCombination) {
+      setEditingId(state.currentCombination.id);
+      setNewCombination({
+        name: state.currentCombination.name,
+        segments: state.currentCombination.segments.map(segment => ({
+          ...segment,
+          id: segment.id,
+        })),
+      });
+    }
+  }, [state.currentCombination]);
 
   // 处理添加新组合
   const handleAddCombination = () => {
@@ -65,7 +79,7 @@ const TimingConfig: React.FC = () => {
           name: '准备时间',
           duration: 60,
           color: '#4ade80',
-          showTime: true,
+          showTime: false,
           playSound: true,
           soundType: 'bell',
         },
@@ -96,7 +110,7 @@ const TimingConfig: React.FC = () => {
           name: '准备时间',
           duration: 60,
           color: '#4ade80',
-          showTime: true,
+          showTime: false,
           playSound: true,
           soundType: 'bell',
         },
@@ -112,12 +126,12 @@ const TimingConfig: React.FC = () => {
         ...newCombination.segments,
         {
           id: generateId(),
-          name: `时间段 ${newCombination.segments.length + 1}`,
+          name: `阶段 ${newCombination.segments.length + 1}`,
           duration: 60,
           color: '#60a5fa',
-          showTime: true,
+          showTime: false,
           playSound: true,
-          soundType: 'default',
+          soundType: 'bell',
         },
       ],
     });
@@ -167,50 +181,44 @@ const TimingConfig: React.FC = () => {
           </div>
 
           {/* 时间段列表 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              时间段
-            </label>
+          <div className="space-y-2">
             {newCombination.segments.map((segment, index) => (
               <div
                 key={segment.id}
-                className="space-y-2 p-3 bg-gray-50 rounded-md mb-3"
+                className="p-3 bg-white rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md"
               >
-                <div className="flex items-center space-x-2 mb-2">
-                  <h4 className="text-sm font-medium text-gray-700">
-                    时间段 {index + 1}
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
+                      阶段 {index + 1}
+                    </span>
                   </h4>
-                  {newCombination.segments.length > 1 && (
-                    <button
-                      onClick={() => handleDeleteSegment(index)}
-                      className="ml-auto text-red-600 hover:text-red-800 text-sm"
-                    >
-                      删除
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleDeleteSegment(index)}
+                    className="text-red-500 hover:text-red-700 text-xs flex items-center gap-1 transition-colors"
+                    disabled={false}
+                  >
+                    <span className="text-red-400">🗑️</span>
+                    删除
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                   {/* 时间段名称 */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      名称
-                    </label>
                     <input
                       type="text"
                       value={segment.name}
                       onChange={(e) =>
                         handleUpdateSegment(index, { name: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-gray-300"
+                      placeholder="名称"
                     />
                   </div>
 
                   {/* 时间段时长 */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      时长 (秒)
-                    </label>
                     <input
                       type="number"
                       value={segment.duration}
@@ -219,100 +227,113 @@ const TimingConfig: React.FC = () => {
                           duration: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-gray-300"
                       min="0"
+                      placeholder="时长(秒)"
                     />
                   </div>
 
-                  {/* 时间段颜色 */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      颜色
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="color"
-                        value={segment.color}
-                        onChange={(e) =>
-                          handleUpdateSegment(index, { color: e.target.value })
-                        }
-                        className="w-10 h-10 rounded cursor-pointer"
-                      />
-                      <input
-                        type="text"
-                        value={segment.color}
-                        onChange={(e) =>
-                          handleUpdateSegment(index, { color: e.target.value })
-                        }
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        placeholder="#4ade80"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 显示时间和提示音 */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={segment.showTime}
-                        onChange={(e) =>
-                          handleUpdateSegment(index, {
-                            showTime: e.target.checked,
-                          })
-                        }
-                        className="rounded text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-700">显示时间</span>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={segment.playSound}
-                        onChange={(e) =>
-                          handleUpdateSegment(index, {
-                            playSound: e.target.checked,
-                          })
-                        }
-                        className="rounded text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-700">提示音</span>
-                    </div>
-
-                    {/* 声音类型选择 */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        声音类型
-                      </label>
-                      <select
-                        value={segment.soundType}
-                        onChange={(e) =>
-                          handleUpdateSegment(index, {
-                            soundType: e.target.value as 'default' | 'bell' | 'chime' | 'beep' | 'alarm' | 'custom',
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      >
-                        <option value="default">默认</option>
-                        <option value="bell">铃铛声</option>
-                        <option value="chime">钟声</option>
-                        <option value="beep">提示音</option>
-                        <option value="alarm">警报声</option>
-                        <option value="custom">自定义</option>
-                      </select>
-                    </div>
+                  {/* 时间段颜色 - 精简设计，仅保留颜色选择器 */}
+                  <div className="flex items-center">
+                    <input
+                      type="color"
+                      value={segment.color}
+                      onChange={(e) =>
+                        handleUpdateSegment(index, { color: e.target.value })
+                      }
+                      className="w-8 h-8 rounded-md cursor-pointer shadow-sm transition-all border border-gray-200"
+                      title="选择颜色"
+                    />
                   </div>
                 </div>
+
+                {/* 显示选项和声音设置 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-gray-100">
+                  {/* 显示时间 - 默认不勾选 */}
+                  <div className="flex items-center space-x-1">
+                    <input
+                      type="checkbox"
+                      checked={segment.showTime}
+                      onChange={(e) =>
+                        handleUpdateSegment(index, {
+                          showTime: e.target.checked,
+                        })
+                      }
+                      className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4"
+                    />
+                    <span className="text-xs text-gray-600">显示时间</span>
+                  </div>
+
+                  {/* 提示音 */}
+                  <div className="flex items-center space-x-1">
+                    <input
+                      type="checkbox"
+                      checked={segment.playSound}
+                      onChange={(e) =>
+                        handleUpdateSegment(index, {
+                          playSound: e.target.checked,
+                        })
+                      }
+                      className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4"
+                    />
+                    <span className="text-xs text-gray-600">提示音</span>
+                  </div>
+                </div>
+
+                {/* 声音类型选择和试听按钮 - 仅在勾选提示音时显示 */}
+                {segment.playSound && (
+                  <div className="flex items-center gap-1 pt-2">
+                    <select
+                      value={segment.soundType}
+                      onChange={(e) =>
+                        handleUpdateSegment(index, {
+                          soundType: e.target.value as SoundType,
+                        })
+                      }
+                      className="w-32 px-2 py-1.5 text-sm border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-gray-300"
+                    >
+                      <option value="bell">铃铛声</option>
+                      <option value="chime">钟声</option>
+                      <option value="beep">提示音</option>
+                    </select>
+                    <button
+                      onClick={() => {
+                        try {
+                          // 声音类型到文件路径的映射
+                          const soundMap: Record<string, string> = {
+                            bell: '/sounds/bell.wav',
+                            chime: '/sounds/chime.wav',
+                            beep: '/sounds/bell_service.wav',
+                            alarm: '/sounds/bell_service.wav',
+                            default: '/sounds/bell.wav',
+                            custom: '/sounds/bell.wav'
+                          };
+                          
+                          // 创建音频对象并播放
+                          const audio = new Audio(soundMap[segment.soundType] || soundMap.default);
+                          audio.play().catch(err => {
+                            console.error('Failed to play sound:', err);
+                          });
+                        } catch (error) {
+                          console.error('Error playing sound:', error);
+                        }
+                      }}
+                      className="px-2 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md shadow-sm transition-all text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-1 text-xs"
+                      title="试听声音"
+                    >
+                      🔊 试听
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
 
             {/* 添加时间段按钮 */}
             <button
               onClick={handleAddSegment}
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
             >
-              + 添加时间段
+              + 添加阶段
             </button>
           </div>
 
