@@ -1,73 +1,67 @@
-# React + TypeScript + Vite
+# Toastmaster Timer Tools (头马时间官助手)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个专为 Toastmasters（头马国际演讲会）会议设计的专业计时工具。帮助时间官轻松管理会议流程，确保演讲者精准掌握时间。
 
-Currently, two official plugins are available:
+![Logo](public/logo.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ 主要功能
 
-## React Compiler
+- **多场景预设**：内置标准的 Toastmasters 计时规则，包括：
+  - 即兴演讲 (Table Topics): 1-2 分钟
+  - 备稿演讲 (Prepared Speech): 5-7 分钟
+  - 点评/评估 (Evaluation): 2-3 分钟
+  - 自我介绍 (Self Intro): 30 秒
+- **自定义组合**：支持创建和保存自定义的时间组合，满足特殊会议需求。
+- **直观的视觉提示**：
+  - 🟢 绿牌：达到合格时间
+  - 🟡 黄牌：提示时间
+  - 🔴 红牌：警告时间
+- **声音提醒**：可配置的铃声提醒功能。
+- **时间线记录**：
+  - 自动记录每位演讲者的具体时长。
+  - 自动计算并标记超时/合格状态。
+  - 支持添加备注和修改记录。
+  - 历史记录查询与筛选。
+- **响应式设计**：适配各种屏幕尺寸，侧边栏可折叠，专注计时界面。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ 技术栈
 
-## Expanding the ESLint configuration
+- **前端框架**: React 18 + TypeScript
+- **构建工具**: Vite
+- **样式库**: Tailwind CSS
+- **状态管理**: React Context + useReducer
+- **持久化**: LocalStorage
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 快速开始
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 安装依赖
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 启动开发服务器
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```bash
+npm run dev
 ```
+
+### 构建生产版本
+
+```bash
+npm run build
+```
+
+## 📝 使用指南
+
+1. **选择计时组合**：在左侧侧边栏选择预设的计时模式（如"备稿演讲"）或创建新模式。
+2. **开始计时**：输入演讲者姓名（可选），点击"开始计时"。
+3. **监控进度**：
+   - 界面背景色会随时间变化（绿 -> 黄 -> 红）。
+   - 进度条实时显示当前阶段。
+4. **结束与记录**：点击"结束"按钮，记录将自动保存到"时间线"页面。
+5. **查看历史**：切换到"时间线"页面查看所有历史记录，支持按日期筛选。
+
+## 📄 许可证
+
+[MIT License](LICENSE)
