@@ -1,4 +1,5 @@
 {
-  "containerized": true,
-  "startCommand": "npm run preview -- --port ${PORT:-4173} --host"
+  "docker": {
+    "dockerfile": "Dockerfile"
+  }
 }
