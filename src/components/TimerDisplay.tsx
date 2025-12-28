@@ -72,29 +72,38 @@ const TimerDisplay: React.FC = () => {
           payload: state.elapsedTime + 1,
         });
 
-        // 检查是否需要切换到下一个时间段
+          // 检查是否需要切换到下一个时间段或结束
         if (state.currentCombination) {
           let totalTime = 0;
           for (let i = 0; i < state.currentSegmentIndex + 1; i++) {
             totalTime += state.currentCombination.segments[i].duration;
           }
 
-          if (
-            state.elapsedTime + 1 >= totalTime &&
-            state.currentSegmentIndex <
-              state.currentCombination.segments.length - 1
-          ) {
-            // 播放当前段结束的提示音
+          // 如果当前段结束
+          if (state.elapsedTime + 1 >= totalTime) {
             const currentSegment = state.currentCombination.segments[state.currentSegmentIndex];
-            if (currentSegment.playSound) {
-              playSound(currentSegment.soundType);
+            const isLastSegment = state.currentSegmentIndex === state.currentCombination.segments.length - 1;
+
+            // 1. 如果还有下一段，播放下一段的提示音（如果配置了）
+            if (!isLastSegment) {
+              const nextSegment = state.currentCombination.segments[state.currentSegmentIndex + 1];
+              if (nextSegment.playSound) {
+                playSound(nextSegment.soundType);
+              }
+              
+              // 切换到下一个时间段
+              dispatch({
+                type: 'SET_CURRENT_SEGMENT_INDEX',
+                payload: state.currentSegmentIndex + 1,
+              });
+            } 
+            // 2. 如果是最后一段（红色警告时间）结束，再次响铃提醒
+            else if (isLastSegment && state.elapsedTime + 1 === totalTime) {
+              // 最后一段结束时响铃（通常是红色结束）
+              if (currentSegment.playSound) {
+                playSound(currentSegment.soundType);
+              }
             }
-            
-            // 切换到下一个时间段
-            dispatch({
-              type: 'SET_CURRENT_SEGMENT_INDEX',
-              payload: state.currentSegmentIndex + 1,
-            });
           }
         }
       }, 1000);
