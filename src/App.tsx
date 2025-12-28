@@ -59,6 +59,23 @@ function App() {
     return Array.from(dates).sort((a, b) => b.localeCompare(a));
   })();
   
+  // 预加载音频文件
+  useEffect(() => {
+    const audioFiles = [
+      '/sounds/bell.wav',
+      '/sounds/bell_service.wav',
+      '/sounds/chime.wav'
+    ];
+    
+    audioFiles.forEach(file => {
+      const audio = new Audio();
+      audio.src = file;
+      audio.preload = 'auto';
+      // 可选：加载失败时打印警告，但不阻断
+      audio.onerror = () => console.warn(`Failed to preload audio: ${file}`);
+    });
+  }, []);
+
   // 侧边栏始终显示
   useEffect(() => {
     setShowSidebar(true);
