@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  tm-timer:
+    build: .
+    container_name: toastmaster-timer
+    restart: always
+    ports:
+      - "8080:80"
+    networks:
+      - tm-network
+
+networks:
+  tm-network:
+    driver: bridge
