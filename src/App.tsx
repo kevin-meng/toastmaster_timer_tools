@@ -3,12 +3,13 @@ import './App.css';
 import TimingConfig from './components/TimingConfig';
 import TimerDisplay from './components/TimerDisplay';
 import Timeline from './components/Timeline';
+import Contact from './components/Contact';
 import { useTimerContext } from './context/TimerContext';
 import type { TimingCombination } from './types';
 import { DEFAULT_COMBINATIONS } from './constants/defaultCombinations';
 
 // 定义页面类型
-type Page = 'config' | 'timer' | 'timeline';
+type Page = 'config' | 'timer' | 'timeline' | 'contact';
 
 function App() {
   // 状态管理：当前页面
@@ -115,7 +116,7 @@ function App() {
         
         {/* 导航菜单 */}
         <nav className="p-2 space-y-1.5">
-          {(['timer', 'config', 'timeline'] as const).map((page) => (
+          {(['timer', 'config', 'timeline', 'contact'] as const).map((page) => (
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
@@ -138,12 +139,18 @@ function App() {
                   📈
                 </div>
               )}
+              {page === 'contact' && (
+                <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                  💬
+                </div>
+              )}
               {/* 菜单项文字 - 仅在展开时显示 */}
               {sidebarExpanded && (
                 <>
                   {page === 'timer' && '正式计时'}
                   {page === 'config' && '时间组设置'}
                   {page === 'timeline' && '时间线'}
+                  {page === 'contact' && '联系方式'}
                 </>
               )}
             </button>
@@ -602,6 +609,7 @@ function App() {
           {currentPage === 'timer' && <TimerDisplay />}
           {currentPage === 'config' && <TimingConfig />}
           {currentPage === 'timeline' && <Timeline selectedDate={selectedDate} />}
+          {currentPage === 'contact' && <Contact />}
         </div>
       </main>
     </div>
