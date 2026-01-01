@@ -103,7 +103,16 @@ function App() {
         <div className="p-4 flex items-center justify-between border-b border-gray-100 h-24">
           {/* 标题 - 仅在展开时显示 */}
           {sidebarExpanded && (
-            <img src="/logo.png" alt="头马时间官助手" className="h-16 w-auto object-contain" />
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="头马时间官助手" className="h-16 w-auto object-contain" />
+              <button
+                onClick={() => setCurrentPage('contact')}
+                className="w-6 h-6 rounded-full bg-gray-100 text-gray-400 hover:bg-orange-100 hover:text-orange-500 flex items-center justify-center transition-all"
+                title="联系我们"
+              >
+                <span className="text-xs">💬</span>
+              </button>
+            </div>
           )}
           {/* 折叠/展开按钮 */}
           <button
@@ -116,7 +125,7 @@ function App() {
         
         {/* 导航菜单 */}
         <nav className="p-2 space-y-1.5">
-          {(['timer', 'config', 'timeline', 'contact'] as const).map((page) => (
+          {(['timer', 'config', 'timeline'] as const).map((page) => (
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
@@ -139,18 +148,12 @@ function App() {
                   📈
                 </div>
               )}
-              {page === 'contact' && (
-                <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                  💬
-                </div>
-              )}
               {/* 菜单项文字 - 仅在展开时显示 */}
               {sidebarExpanded && (
                 <>
                   {page === 'timer' && '正式计时'}
                   {page === 'config' && '时间组设置'}
                   {page === 'timeline' && '时间线'}
-                  {page === 'contact' && '联系方式'}
                 </>
               )}
             </button>
