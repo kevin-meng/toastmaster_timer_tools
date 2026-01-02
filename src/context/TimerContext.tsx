@@ -102,11 +102,7 @@ const timerReducer = (
             ? {
                 ...session,
                 endTime: action.payload.endTime,
-                duration: Math.floor(
-                  (action.payload.endTime.getTime() -
-                    session.startTime.getTime()) /
-                    1000
-                ),
+                duration: state.elapsedTime, // 直接使用计时器的累计时间
               }
             : session
         ),
@@ -115,11 +111,7 @@ const timerReducer = (
             ? {
                 ...state.currentSession,
                 endTime: action.payload.endTime,
-                duration: Math.floor(
-                  (action.payload.endTime.getTime() -
-                    state.currentSession.startTime.getTime()) /
-                    1000
-                ),
+                duration: state.elapsedTime, // 直接使用计时器的累计时间
               }
             : state.currentSession,
         isRunning: false,
