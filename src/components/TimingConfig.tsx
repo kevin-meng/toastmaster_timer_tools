@@ -156,9 +156,9 @@ const TimingConfig: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 md:p-6">
       {/* 添加/编辑组合表单 */}
-      <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6 border border-gray-200">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           {editingId ? '编辑计时组合' : '添加新计时组合'}
         </h3>
