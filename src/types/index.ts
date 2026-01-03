@@ -47,6 +47,16 @@ export interface TimelineItem {
   status: 'active' | 'completed' | 'paused';
 }
 
+// 用户模型
+export interface User {
+  id: number;
+  phone?: string;
+  wechat_openid?: string;
+  username?: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
 // 应用状态模型
 export interface AppState {
   combinations: TimingCombination[];
@@ -57,4 +67,6 @@ export interface AppState {
   isPaused: boolean;
   elapsedTime: number; // 已用时间（秒）
   currentSegmentIndex: number;
+  // 会话列表（新增，解决 App.tsx 中的引用错误）
+  sessions: Session[];
 }

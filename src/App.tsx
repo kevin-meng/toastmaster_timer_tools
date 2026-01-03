@@ -4,7 +4,9 @@ import TimingConfig from './components/TimingConfig';
 import TimerDisplay from './components/TimerDisplay';
 import Timeline from './components/Timeline';
 import Contact from './components/Contact';
+import Login from './components/Login';
 import { useTimerContext } from './context/TimerContext';
+import { useAuth } from './context/AuthContext';
 import type { TimingCombination } from './types';
 import { DEFAULT_COMBINATIONS } from './constants/defaultCombinations';
 
@@ -12,6 +14,8 @@ import { DEFAULT_COMBINATIONS } from './constants/defaultCombinations';
 type Page = 'config' | 'timer' | 'timeline' | 'contact';
 
 function App() {
+  const { user, loading, logout } = useAuth();
+
   // 状态管理：当前页面
   const [currentPage, setCurrentPage] = useState<Page>('timer');
   // 状态管理：侧边栏显示
@@ -97,6 +101,18 @@ function App() {
   const handleDateChange = (date: string) => {
     setSelectedDate(date);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col md:flex-row">
@@ -657,6 +673,42 @@ function App() {
             </div>
           </div>
         )}
+
+        {/* 用户信息与退出登录 */}
+        <div className="mt-auto p-4 border-t border-gray-100 bg-gray-50">
+          {(sidebarExpanded || mobileMenuOpen) ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                  {user.phone ? user.phone.slice(-4) : 'User'}
+                </div>
+                <div className="text-sm">
+                  <div className="font-medium text-gray-900">{user.phone || '微信用户'}</div>
+                  <div className="text-xs text-gray-500">在线</div>
+                </div>
+              </div>
+              <button
+                onClick={logout}
+                className="text-gray-400 hover:text-red-600 transition-colors"
+                title="退出登录"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={logout}
+              className="w-full flex justify-center text-gray-400 hover:text-red-600 transition-colors"
+              title="退出登录"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          )}
+        </div>
       </aside>
       
       {/* 右侧主要内容 - 自适应宽度，支持滚动 */}

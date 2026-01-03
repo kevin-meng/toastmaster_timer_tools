@@ -3,11 +3,14 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
 import { TimerProvider } from './context/TimerContext';
+import { AuthProvider } from './context/AuthContext';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <TimerProvider>
-      <App />
-    </TimerProvider>
+    <AuthProvider>
+      <TimerProvider>
+        <App />
+      </TimerProvider>
+    </AuthProvider>
   </StrictMode>
 );

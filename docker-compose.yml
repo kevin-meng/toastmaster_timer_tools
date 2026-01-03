@@ -1,14 +1,49 @@
-version: '3'
+version: '3.8'
 
 services:
-  tm-timer:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=toastmaster
+    ports:
+      - "5432:5432"
+    networks:
+      - tm-network
+
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/app
+    environment:
+      - POSTGRES_SERVER=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=toastmaster
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - tm-network
+
+  frontend:
     build: .
     container_name: toastmaster-timer
     restart: always
     ports:
       - "8080:80"
+    depends_on:
+      - backend
     networks:
       - tm-network
+
+volumes:
+  postgres_data:
 
 networks:
   tm-network:
