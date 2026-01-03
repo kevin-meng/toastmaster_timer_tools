@@ -177,15 +177,15 @@ const Timeline: React.FC<TimelineProps> = ({ selectedDate }) => {
                       : 0);
                     
                     return (
-                      <div key={session.id} className={`relative pl-8 ${session.deleted ? 'opacity-50' : ''}`}>
+                      <div key={session.id} className={`relative pl-4 md:pl-8 ${session.deleted ? 'opacity-50' : ''}`}>
                         {/* 时间轴圆点 */}
-                        <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-4 border-white ${overTime ? 'bg-red-500' : 'bg-blue-500'} shadow-sm box-content`}></div>
+                        <div className={`absolute left-[-5px] md:-left-[9px] top-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 md:border-4 border-white ${overTime ? 'bg-red-500' : 'bg-blue-500'} shadow-sm box-content`}></div>
                         
                         {/* 卡片内容 */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow p-5 group">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow p-4 md:p-5 group relative">
                           {/* 头部：标题和菜单 */}
                           <div className="flex justify-between items-start mb-2">
-                            <div className="flex-1 mr-4 text-left">
+                            <div className="flex-1 mr-2 text-left">
                               {isEditing ? (
                                 <input
                                   type="text"
@@ -194,11 +194,11 @@ const Timeline: React.FC<TimelineProps> = ({ selectedDate }) => {
                                   className="w-full text-lg font-bold text-gray-800 border-b border-gray-300 focus:border-blue-500 outline-none bg-transparent"
                                 />
                               ) : (
-                                <h4 className="text-lg font-bold text-gray-800 leading-tight">{session.name}</h4>
+                                <h4 className="text-base md:text-lg font-bold text-gray-800 leading-tight">{session.name}</h4>
                               )}
                               
                               {/* 时间信息 - 移到标题下方，增加层次感 */}
-                              <div className="flex items-center text-xs text-gray-400 mt-1 space-x-2">
+                              <div className="flex flex-wrap items-center text-xs text-gray-400 mt-1 gap-2">
                                 <span>{formatTime(session.startTime)} - {session.endTime ? formatTime(session.endTime) : '未结束'}</span>
                                 <span className="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[10px]">
                                   {getCombinationName(session.combinationId)}
@@ -207,16 +207,16 @@ const Timeline: React.FC<TimelineProps> = ({ selectedDate }) => {
                             </div>
 
                             {/* 右侧数据展示 - 强调数据 */}
-                            <div className="text-right flex flex-col items-end min-w-[80px]">
-                              <div className="text-2xl font-mono font-medium text-gray-700 leading-none mb-1">
+                            <div className="text-right flex flex-col items-end min-w-[60px] md:min-w-[80px]">
+                              <div className="text-xl md:text-2xl font-mono font-medium text-gray-700 leading-none mb-1">
                                 {formatDuration(duration)}
                               </div>
                               {overTime ? (
-                                <span className="text-xs font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
+                                <span className="text-[10px] md:text-xs font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded whitespace-nowrap">
                                   超时 +{formatDuration(overTime)}
                                 </span>
                               ) : (
-                                <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                                <span className="text-[10px] md:text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded whitespace-nowrap">
                                   正常完成
                                 </span>
                               )}
@@ -240,31 +240,31 @@ const Timeline: React.FC<TimelineProps> = ({ selectedDate }) => {
                             )}
                           </div>
 
-                          {/* 操作栏 - 鼠标悬停显示 */}
-                          <div className="absolute top-4 right-[-40px] opacity-0 group-hover:opacity-100 transition-opacity flex flex-col space-y-2">
+                          {/* 操作栏 - 移动端直接显示在底部，桌面端保持悬停显示或优化 */}
+                          <div className="mt-3 flex justify-end gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                              {session.deleted ? (
                                <button
                                  onClick={() => setDeleteConfirm(session.id)}
-                                 className="p-2 bg-white rounded-full shadow-md text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors"
+                                 className="p-1.5 md:p-2 bg-gray-50 rounded-lg text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors text-xs md:text-sm flex items-center gap-1"
                                  title="还原"
                                >
-                                 ♻️
+                                 <span>♻️ 还原</span>
                                </button>
                              ) : (
                                <>
                                  <button
                                    onClick={() => handleEditSession(session)}
-                                   className="p-2 bg-white rounded-full shadow-md text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                   className="p-1.5 md:p-2 bg-gray-50 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors text-xs md:text-sm flex items-center gap-1"
                                    title="编辑"
                                  >
-                                   ✏️
+                                   <span>✏️ 编辑</span>
                                  </button>
                                  <button
                                    onClick={() => setDeleteConfirm(session.id)}
-                                   className="p-2 bg-white rounded-full shadow-md text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                   className="p-1.5 md:p-2 bg-gray-50 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors text-xs md:text-sm flex items-center gap-1"
                                    title="删除"
                                  >
-                                   🗑️
+                                   <span>🗑️ 删除</span>
                                  </button>
                                </>
                              )}

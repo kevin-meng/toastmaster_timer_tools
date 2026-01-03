@@ -168,7 +168,7 @@ const TimerDisplay: React.FC = () => {
         <div className="absolute inset-0 flex items-center justify-center p-4">
           {currentSegment && state.showCountdown && (
             <div className="text-center">
-              <div className="text-white text-9xl font-bold">
+              <div className="text-white text-6xl md:text-9xl font-bold transition-all duration-300">
                 {formatTime(remainingTime)}
               </div>
             </div>

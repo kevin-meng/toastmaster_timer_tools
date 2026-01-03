@@ -28,6 +28,9 @@ function App() {
   // 状态管理：正在编辑的组合
   const [editingCombination, setEditingCombination] = useState<TimingCombination | null>(null);
   
+  // 状态管理：移动端菜单是否打开
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   // 状态管理：历史记录筛选范围 - 默认为当前日期 (YYYY-MM-DD)
   const getCurrentDate = () => {
     const now = new Date();
@@ -96,13 +99,39 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
-      {/* 左侧固定可折叠侧边栏 - 加宽设计 */}
-      <aside className={`${sidebarExpanded ? 'w-72' : 'w-20'} bg-white shadow-xl flex flex-col transition-all duration-300 ease-in-out overflow-hidden h-screen fixed left-0 top-0 z-10 border-r border-gray-100`}>
-        {/* 侧边栏顶部 */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col md:flex-row">
+      {/* 移动端顶部导航栏 */}
+      <div className="md:hidden bg-white shadow-sm border-b border-gray-100 p-4 flex items-center justify-between sticky top-0 z-30">
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="头马时间官助手" className="h-10 w-auto object-contain" />
+          <h1 className="text-lg font-bold text-gray-800">Timer Tools</h1>
+        </div>
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
+        >
+          {mobileMenuOpen ? '✕' : '☰'}
+        </button>
+      </div>
+
+      {/* 移动端侧边栏遮罩 */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* 左侧固定可折叠侧边栏 - 响应式设计 */}
+      <aside className={`
+        fixed md:sticky top-0 left-0 h-screen z-50 bg-white shadow-xl flex flex-col transition-all duration-300 ease-in-out border-r border-gray-100
+        ${mobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0'}
+        ${sidebarExpanded ? 'md:w-72' : 'md:w-20'}
+      `}>
+        {/* 侧边栏顶部 (仅桌面端显示折叠按钮) */}
         <div className="p-4 flex items-center justify-between border-b border-gray-100 h-24">
           {/* 标题 - 仅在展开时显示 */}
-          {sidebarExpanded && (
+          {(sidebarExpanded || mobileMenuOpen) && (
             <div className="flex items-center gap-3">
               <img src="/logo.png" alt="头马时间官助手" className="h-16 w-auto object-contain" />
               <button
@@ -114,12 +143,19 @@ function App() {
               </button>
             </div>
           )}
-          {/* 折叠/展开按钮 */}
+          {/* 折叠/展开按钮 (仅桌面端) */}
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className="p-1 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
+            className="hidden md:block p-1 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
           >
             {sidebarExpanded ? '◀' : '▶'}
+          </button>
+          {/* 移动端关闭按钮 */}
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="md:hidden p-1 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
+          >
+            ✕
           </button>
         </div>
         
@@ -128,8 +164,11 @@ function App() {
           {(['timer', 'config', 'timeline'] as const).map((page) => (
             <button
               key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`w-full ${sidebarExpanded ? 'px-4 py-2.5 text-left' : 'px-4 py-3 justify-center'} rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-3 hover:shadow-md hover:translate-x-0.5 ${currentPage === page 
+              onClick={() => {
+                setCurrentPage(page);
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full ${(sidebarExpanded || mobileMenuOpen) ? 'px-4 py-2.5 text-left' : 'px-4 py-3 justify-center'} rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-3 hover:shadow-md hover:translate-x-0.5 ${currentPage === page 
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' 
                 : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}`}
             >
@@ -149,7 +188,7 @@ function App() {
                 </div>
               )}
               {/* 菜单项文字 - 仅在展开时显示 */}
-              {sidebarExpanded && (
+              {(sidebarExpanded || mobileMenuOpen) && (
                 <>
                   {page === 'timer' && '正式计时'}
                   {page === 'config' && '时间组设置'}
@@ -158,10 +197,26 @@ function App() {
               )}
             </button>
           ))}
+          
+          {/* 移动端联系方式菜单项 */}
+          <button
+            onClick={() => {
+              setCurrentPage('contact');
+              setMobileMenuOpen(false);
+            }}
+            className={`md:hidden w-full px-4 py-2.5 text-left rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-3 hover:shadow-md hover:translate-x-0.5 ${currentPage === 'contact'
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' 
+              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}`}
+          >
+            <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+              💬
+            </div>
+            <span>联系方式</span>
+          </button>
         </nav>
         
         {/* 选择计时组合（仅在计时页面且展开时显示） */}
-        {currentPage === 'timer' && sidebarExpanded && (
+        {currentPage === 'timer' && (sidebarExpanded || mobileMenuOpen) && (
           <div className="p-3 space-y-2">
             <div className="bg-white rounded-xl p-3 space-y-2.5 shadow-md border border-gray-100">
               <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
@@ -267,7 +322,7 @@ function App() {
         )}
         
         {/* 时间组合列表（仅在时间设置页面、展开时显示） */}
-        {currentPage === 'config' && sidebarExpanded && (
+        {currentPage === 'config' && (sidebarExpanded || mobileMenuOpen) && (
           <div className="p-3 overflow-y-auto flex-1 text-sm">
             <div className="bg-gray-50 rounded-lg p-3 space-y-2.5 shadow-sm">
               <div className="flex justify-between items-center">
@@ -444,7 +499,7 @@ function App() {
         )}
         
         {/* 实时时间线和控制按钮（仅在计时页面、显示且展开时显示） */}
-        {currentPage === 'timer' && showSidebar && sidebarExpanded && (
+        {currentPage === 'timer' && showSidebar && (sidebarExpanded || mobileMenuOpen) && (
           <div className="p-3 overflow-y-auto flex-1 text-sm">
             <div className="bg-gray-50 rounded-lg p-3 space-y-2.5 shadow-sm">
               <h3 className="text-sm font-semibold text-gray-800">当前会话</h3>
@@ -572,7 +627,7 @@ function App() {
         )}
         
         {/* 历史记录筛选下拉选项（仅在时间线页面、展开时显示） */}
-        {currentPage === 'timeline' && sidebarExpanded && (
+        {currentPage === 'timeline' && (sidebarExpanded || mobileMenuOpen) && (
           <div className="p-3 text-sm">
             <div className="bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-100">
               <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -605,7 +660,7 @@ function App() {
       </aside>
       
       {/* 右侧主要内容 - 自适应宽度，支持滚动 */}
-      <main className={`flex-1 transition-all duration-300 ${sidebarExpanded ? 'ml-72' : 'ml-20'} overflow-auto`}>
+      <main className={`flex-1 transition-all duration-300 ${sidebarExpanded ? 'md:ml-72' : 'md:ml-20'} overflow-auto`}>
         {/* 页面内容 - 居中显示，有最大宽度 */}
         <div className="max-w-5xl mx-auto p-6">
           {/* 根据当前页面渲染不同的组件 */}
