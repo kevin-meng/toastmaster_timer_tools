@@ -65,20 +65,37 @@ const TimerDisplay: React.FC = () => {
     return Math.max(0, currentSegment.duration - timeInCurrentSegment);
   };
 
-  // 播放声音函数 - 3个素材对应3个选项
+  // 播放声音函数 — 使用预加载的 Audio 实例，0 延迟
+  const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
+
+  // 初始化预加载
+  useEffect(() => {
+    const soundMap: Record<string, string> = {
+      bell: '/sounds/bell.m4a',
+      chime: '/sounds/chime.m4a',
+      beep: '/sounds/bell_service.m4a',
+      alarm: '/sounds/bell_service.m4a',
+      default: '/sounds/bell.m4a',
+      custom: '/sounds/bell.m4a',
+    };
+    Object.entries(soundMap).forEach(([key, src]) => {
+      const a = new Audio();
+      a.src = src;
+      a.preload = 'auto';
+      audioRefs.current[key] = a;
+    });
+  }, []);
+
   const playSound = (soundType: string) => {
     try {
-      // ⚡ 使用压缩后轻量的 M4A 格式，加载更快
-      const soundMap: Record<string, string> = {
-        bell: '/sounds/bell.m4a',
-        chime: '/sounds/chime.m4a',
-        beep: '/sounds/bell_service.m4a',
-        alarm: '/sounds/bell_service.m4a',
-        default: '/sounds/bell.m4a',
-        custom: '/sounds/bell.m4a'
-      };
-
-      const audio = new Audio(soundMap[soundType] || soundMap.default);
+      const audio = audioRefs.current[soundType] || audioRefs.current['bell'];
+      if (!audio) {
+        // 回退：创建新实例
+        const fallback = new Audio('/sounds/bell.m4a');
+        fallback.play().catch(() => {});
+        return;
+      }
+      audio.currentTime = 0;
       audio.play().catch(err => {
         console.error('Failed to play sound:', err);
       });
