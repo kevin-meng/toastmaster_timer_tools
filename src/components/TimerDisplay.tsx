@@ -90,43 +90,37 @@ const TimerDisplay: React.FC = () => {
     }
   };
 
-  // 计时器逻辑
+  // 计时器逻辑 — 用 ref 跟踪 elapsedTime 避免闭包过期
+  const elapsedRef = useRef(state.elapsedTime);
+  useEffect(() => { elapsedRef.current = state.elapsedTime; }, [state.elapsedTime]);
+  const segIdxRef = useRef(state.currentSegmentIndex);
+  useEffect(() => { segIdxRef.current = state.currentSegmentIndex; }, [state.currentSegmentIndex]);
+
   useEffect(() => {
     if (state.isRunning && !state.isPaused) {
       timerRef.current = setInterval(() => {
-        dispatch({
-          type: 'UPDATE_ELAPSED_TIME',
-          payload: state.elapsedTime + 1,
-        });
+        const nextElapsed = elapsedRef.current + 1;
+        dispatch({ type: 'UPDATE_ELAPSED_TIME', payload: nextElapsed });
+        elapsedRef.current = nextElapsed;
 
-          // 检查是否需要切换到下一个时间段或结束
         if (state.currentCombination) {
           let totalTime = 0;
-          for (let i = 0; i < state.currentSegmentIndex + 1; i++) {
+          for (let i = 0; i < segIdxRef.current + 1; i++) {
             totalTime += state.currentCombination.segments[i].duration;
           }
 
-          // 如果当前段结束
-          if (state.elapsedTime + 1 >= totalTime) {
-            const currentSegment = state.currentCombination.segments[state.currentSegmentIndex];
-            const isLastSegment = state.currentSegmentIndex === state.currentCombination.segments.length - 1;
+          if (nextElapsed >= totalTime) {
+            const currentSegment = state.currentCombination.segments[segIdxRef.current];
+            const isLastSegment = segIdxRef.current === state.currentCombination.segments.length - 1;
 
-            // 1. 如果还有下一段，播放下一段的提示音（如果配置了）
             if (!isLastSegment) {
-              const nextSegment = state.currentCombination.segments[state.currentSegmentIndex + 1];
+              const nextSegment = state.currentCombination.segments[segIdxRef.current + 1];
               if (nextSegment.playSound) {
                 playSound(nextSegment.soundType);
               }
-              
-              // 切换到下一个时间段
-              dispatch({
-                type: 'SET_CURRENT_SEGMENT_INDEX',
-                payload: state.currentSegmentIndex + 1,
-              });
-            } 
-            // 2. 如果是最后一段（红色警告时间）结束，再次响铃提醒
-            else if (isLastSegment && state.elapsedTime + 1 === totalTime) {
-              // 最后一段结束时响铃（通常是红色结束）
+              dispatch({ type: 'SET_CURRENT_SEGMENT_INDEX', payload: segIdxRef.current + 1 });
+              segIdxRef.current = segIdxRef.current + 1;
+            } else if (isLastSegment && nextElapsed === totalTime) {
               if (currentSegment.playSound) {
                 playSound(currentSegment.soundType);
               }
@@ -143,14 +137,7 @@ const TimerDisplay: React.FC = () => {
         clearInterval(timerRef.current);
       }
     };
-  }, [
-    state.isRunning,
-    state.isPaused,
-    state.elapsedTime,
-    state.currentSegmentIndex,
-    state.currentCombination,
-    dispatch,
-  ]);
+  }, [state.isRunning, state.isPaused, state.currentCombination, dispatch]);
 
   // 进入/退出全屏模式
   const toggleFullscreen = () => {
