@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import api from '../utils/api';
-import { User } from '../types';
+import type { User } from '../types';
 
 const GUEST_USER: User = {
   id: 0,

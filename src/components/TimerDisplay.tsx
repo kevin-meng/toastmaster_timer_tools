@@ -192,7 +192,6 @@ const TimerDisplay: React.FC = () => {
   }, []);
 
   const currentSegment = getCurrentSegment();
-  const remainingTime = getRemainingTime();
 
   return (
     <div className="w-full h-full relative overflow-hidden">

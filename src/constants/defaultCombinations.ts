@@ -1,4 +1,4 @@
-import type { TimingCombination } from '../types';
+import type { TimingCombination, SoundType } from '../types';
 
 // 红段 30s 不计入时间范围
 // 按上限拆分：绿 + 黄 = upperMin * 60，红段额外 +30s
@@ -14,9 +14,9 @@ const mk = (id: string, name: string, lowerMin: number, upperMin: number): Timin
     id,
     name: `${name} (${label})`,
     segments: [
-      { id: `${id}_g`, name: '正常时间', duration: green, color: '#4ade80', showTime: true, playSound: false, soundType: 'default' },
-      ...(yellow > 0 ? [{ id: `${id}_y`, name: '橙色时间', duration: yellow, color: '#facc15', showTime: true, playSound: false, soundType: 'default' }] : []),
-      { id: `${id}_r`, name: '警告时间(不计入)', duration: 30, color: '#f87171', showTime: true, playSound: true, soundType: 'bell' },
+      { id: `${id}_g`, name: '正常时间', duration: green, color: '#4ade80', showTime: true, playSound: false, soundType: 'default' as SoundType },
+      ...(yellow > 0 ? [{ id: `${id}_y`, name: '橙色时间', duration: yellow, color: '#facc15', showTime: true, playSound: false, soundType: 'default' as SoundType }] : []),
+      { id: `${id}_r`, name: '警告时间(不计入)', duration: 30, color: '#f87171', showTime: true, playSound: true, soundType: 'bell' as SoundType },
     ],
     createdAt: new Date(), updatedAt: new Date(),
   };

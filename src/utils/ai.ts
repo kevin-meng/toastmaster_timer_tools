@@ -99,16 +99,6 @@ function formatTime(date: Date): string {
   });
 }
 
-function fmtDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}'${String(secs).padStart(2, '0')}"`;
-}
-
-// ============================================================
-// API Key 管理
-// ============================================================
-
 export function getApiKey(): string {
   try { return localStorage.getItem(STORAGE_KEYS.API_KEY) || ''; } catch { return ''; }
 }
