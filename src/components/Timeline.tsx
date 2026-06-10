@@ -195,10 +195,16 @@ const Timeline: React.FC<{ selectedDate: string }> = ({ selectedDate }) => {
   const combName = (id: string) => { const c = getComb(id); return c ? c.name : '未知组合'; };
   const calcOT = (s: any) => { const c = getComb(s.combinationId); if (!c) return null; const e = c.segments.reduce((sum: number, seg: any) => sum + seg.duration, 0); const a = s.duration || (s.endTime ? Math.floor((new Date(s.endTime).getTime() - new Date(s.startTime).getTime()) / 1000) : 0); return a - e > 0 ? a - e : null; };
 
+  const [sortAsc, setSortAsc] = useState(false); // 默认降序（最新的在前）→ 改为默认升序
+
   // Sessions
   const daySessions = useMemo(() => {
-    return state.sessions.filter(s => fmtDate(s.startTime) === selectedDate && (!showDeleted ? !s.deleted : true)).sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-  }, [state.sessions, selectedDate, showDeleted]);
+    const filtered = state.sessions.filter(s => fmtDate(s.startTime) === selectedDate && (!showDeleted ? !s.deleted : true));
+    return filtered.sort((a, b) => {
+      const diff = new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+      return sortAsc ? diff : -diff;  // false=降序(新→旧), true=升序(旧→新)
+    });
+  }, [state.sessions, selectedDate, showDeleted, sortAsc]);
   const hasSessions = daySessions.length > 0;
 
   // 报告加载
@@ -300,7 +306,7 @@ const Timeline: React.FC<{ selectedDate: string }> = ({ selectedDate }) => {
                 {aiReport.report[lang].summary && (
                   <div className="text-sm font-medium text-blue-700 mb-4 px-4 py-3 bg-blue-50/50 rounded-xl border border-blue-100">{aiReport.report[lang].summary}</div>
                 )}
-                <div className="text-sm text-gray-700 leading-relaxed bg-white rounded-xl p-6 border border-gray-100 max-h-[60vh] overflow-y-auto"
+                <div className="text-left leading-relaxed bg-white rounded-xl p-6 border border-gray-100 max-h-[60vh] overflow-y-auto"
                   dangerouslySetInnerHTML={{ __html: markdownToHtml(aiReport.report[lang].report) }} />
               </div>
             )}
