@@ -116,19 +116,18 @@ export const TimelineActionsPanel: React.FC<{ selectedDate: string }> = ({ selec
     const zhReport = existing ? existing.report.zh.summary + '\n\n' + existing.report.zh.report : '';
     const enReport = existing ? existing.report.en.summary + '\n\n' + existing.report.en.report : '';
 
-    // 将 Markdown 转为 HTML
+    // 将 Markdown 转为 HTML（紧凑排版）
     const renderMD = (text: string) => {
       let html = text
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/^### (.+)$/gm, '<h3 style="font-size:16px;font-weight:700;color:#1f2937;margin:16px 0 8px">$1</h3>')
-        .replace(/^## (.+)$/gm, '<h2 style="font-size:18px;font-weight:700;color:#111827;margin:20px 0 10px;padding-bottom:4px;border-bottom:1px solid #e5e7eb">$1</h2>')
-        .replace(/^# (.+)$/gm, '<h1 style="font-size:22px;font-weight:800;color:#111827;margin:24px 0 12px">$1</h1>')
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/^\- (.+)$/gm, '<li style="margin-left:16px;color:#374151">$1</li>')
-        .replace(/<\/li>\n<li/g, '</li><li')
-        .replace(/(<li[^>]*>.*<\/li>)/gs, '<ul style="margin:8px 0">$1</ul>')
-        .replace(/\n\n/g, '<br><br>')
+        .replace(/^\- (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>\n?)+/gs, '<ul>$&</ul>')
+        .replace(/\n\n/g, '<br>')
         .replace(/\n/g, '<br>');
       return html;
     };
@@ -137,18 +136,20 @@ export const TimelineActionsPanel: React.FC<{ selectedDate: string }> = ({ selec
 <html lang="zh"><head><meta charset="UTF-8"><title>Timer Report – ${selectedDate}</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif; font-size: 14px; color: #1f2937; padding: 48px; max-width: 800px; margin: 0 auto; }
-  h1 { font-size: 28px; font-weight: 800; color: #111827; margin-bottom: 4px; }
-  .date { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
-  h2 { font-size: 18px; font-weight: 700; color: #1f2937; margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-  th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #e5e7eb; }
-  .report { white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #374151; background: #f9fafb; border-radius: 12px; padding: 24px; margin-bottom: 32px; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif; font-size: 13px; color: #374151; padding: 40px 48px; max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 800; color: #111827; margin-bottom: 2px; }
+  .date { color: #9ca3af; font-size: 12px; margin-bottom: 24px; }
+  h2 { font-size: 16px; font-weight: 700; color: #1f2937; margin: 24px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #e5e7eb; }
+  h3 { font-size: 14px; font-weight: 600; color: #374151; margin: 14px 0 4px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { text-align: left; padding: 6px 10px; font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid #e5e7eb; }
+  td { font-size: 12px; }
+  .report { white-space: pre-wrap; font-size: 13px; line-height: 1.7; color: #374151; background: #f9fafb; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+  .badge { display: inline-block; padding: 1px 7px; border-radius: 9999px; font-size: 10px; font-weight: 600; }
   .ai { background: #f3e8ff; color: #9333ea; }
   .manual { background: #fef3c7; color: #d97706; }
-  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center; color: #d1d5db; font-size: 11px; }
-  @media print { body { padding: 24px; } }
+  .footer { margin-top: 36px; padding-top: 12px; border-top: 1px solid #e5e7eb; text-align: center; color: #d1d5db; font-size: 10px; }
+  @media print { body { padding: 20px 24px; } }
 </style></head><body>
 <h1>⏱️ Timer Report</h1>
 <p class="date">${selectedDate} · ${daySessions.length} 项记录 · ${existing ? '<span class="badge ' + (existing.type === 'ai' ? 'ai' : 'manual') + '">' + (existing.type === 'ai' ? 'AI 生成' : '人工编辑') + '</span>' : '手动整理'}</p>
