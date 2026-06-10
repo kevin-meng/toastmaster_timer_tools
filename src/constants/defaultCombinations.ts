@@ -1,118 +1,48 @@
 import type { TimingCombination } from '../types';
 
-const genSeg = (id: string, name: string, duration: number, color: string, playSound: boolean, showTime = true): any => ({
-  id, name, duration, color, showTime, playSound, soundType: playSound ? 'bell' : ('default' as any),
-});
+// 规则：按上限拆 3 段：绿=上限-90s-黄, 红=30s, 黄=min(60, 上限-绿-红)
+// 如果上限-红-绿 <= 0：不设黄段
+// 如果上限 * 60 - 30 - green <= 0：无绿段（极短）
+const makeSegments = (green: number, yellow: number): any[] => {
+  const segs: any[] = [];
+  if (green > 0) segs.push({ id: `${Math.random().toString(36).substring(2,8)}`, name: '正常时间', duration: green, color: '#4ade80', showTime: true, playSound: false, soundType: 'default' });
+  if (yellow > 0) segs.push({ id: `${Math.random().toString(36).substring(2,8)}`, name: '橙色时间', duration: yellow, color: '#facc15', showTime: true, playSound: false, soundType: 'default' });
+  segs.push({ id: `${Math.random().toString(36).substring(2,8)}`, name: '警告时间', duration: 30, color: '#f87171', showTime: true, playSound: true, soundType: 'bell' });
+  return segs;
+};
 
-// 红段固定 30s；黄段：总时长 ≥ 3min → 60s，< 3min → 30s
+// upperMin: 上限（分钟），按此拆分 3 段
+const mk = (id: string, name: string, upperMin: number): TimingCombination => {
+  const totalSec = upperMin * 60;
+  const red = 30;
+  const yellow = upperMin >= 3 ? 60 : (totalSec - red > 30 ? 30 : 0); // >=3min 黄60s, 其余看空间
+  const green = totalSec - yellow - red;
+  return {
+    id,
+    name: `${name} (上限${upperMin}min)`,
+    segments: green > 0
+      ? [
+          { id: `${id}_g`, name: '正常时间', duration: green, color: '#4ade80', showTime: true, playSound: false, soundType: 'default' },
+          { id: `${id}_y`, name: '橙色时间', duration: yellow, color: '#facc15', showTime: true, playSound: false, soundType: 'default' },
+          { id: `${id}_r`, name: '警告时间', duration: red, color: '#f87171', showTime: true, playSound: true, soundType: 'bell' },
+        ]
+      : [
+          { id: `${id}_g`, name: '正常时间', duration: totalSec - red, color: '#4ade80', showTime: true, playSound: false, soundType: 'default' },
+          { id: `${id}_r`, name: '警告时间', duration: red, color: '#f87171', showTime: true, playSound: true, soundType: 'bell' },
+        ],
+    createdAt: new Date(), updatedAt: new Date(),
+  };
+};
+
 export const DEFAULT_COMBINATIONS: TimingCombination[] = [
-  // ===== 1. 即兴演讲 1-2min =====
-  {
-    id: 'table_topics',
-    name: '即兴演讲 (1-2min)',
-    segments: [
-      genSeg('tt_green', '正常时间', 60, '#4ade80', false),
-      genSeg('tt_yellow', '橙色时间', 30, '#facc15', false),
-      genSeg('tt_red', '警告时间', 30, '#f87171', true),
-    ],
-    createdAt: new Date(), updatedAt: new Date(),
-  },
-  // ===== 2. 备稿演讲 5-7min =====
-  {
-    id: 'prepared_speech',
-    name: '备稿演讲 (5-7min)',
-    segments: [
-      genSeg('ps_green', '正常时间', 300, '#4ade80', false),
-      genSeg('ps_yellow', '橙色时间', 60, '#facc15', false),
-      genSeg('ps_red', '警告时间', 30, '#f87171', true),
-    ],
-    createdAt: new Date(), updatedAt: new Date(),
-  },
-  // ===== 3. 点评/评估 2-3min（总时长 < 3min 但接近，黄=30s）=====
-  {
-    id: 'evaluation',
-    name: '评估 (2-3min)',
-    segments: [
-      genSeg('eval_green', '正常时间', 120, '#4ade80', false),
-      genSeg('eval_yellow', '橙色时间', 30, '#facc15', false),
-      genSeg('eval_red', '警告时间', 30, '#f87171', true),
-    ],
-    createdAt: new Date(), updatedAt: new Date(),
-  },
-  // ===== 4. 自我介绍 30s-1min（< 3min 无黄色）=====
-  {
-    id: 'self_intro',
-    name: '自我介绍 (30s-1min)',
-    segments: [
-      genSeg('intro_green', '正常时间', 30, '#4ade80', false),
-      genSeg('intro_red', '警告时间', 30, '#f87171', true),
-    ],
-    createdAt: new Date(), updatedAt: new Date(),
-  },
-  // ===== 5. 角色介绍 1-2min（总时长 < 3min，黄=30s）=====
-  {
-    id: 'role_intro',
-    name: '角色介绍 (1-2min)',
-    segments: [
-      genSeg('ri_green', '正常时间', 90, '#4ade80', false),
-      genSeg('ri_yellow', '橙色时间', 30, '#facc15', false),
-      genSeg('ri_red', '警告时间', 30, '#f87171', true),
-    ],
-    createdAt: new Date(), updatedAt: new Date(),
-  },
-  // ===== 6. 主席开场 2-4min (>=3min, 黄=60s) =====
-  {
-    id: 'president_opening',
-    name: '主席开场 (2-4min)',
-    segments: [
-      genSeg('po_green', '正常时间', 120, '#4ade80', false),
-      genSeg('po_yellow', '橙色时间', 60, '#facc15', false),
-      genSeg('po_red', '警告时间', 30, '#f87171', true),
-    ],
-    createdAt: new Date(), updatedAt: new Date(),
-  },
-  // ===== 7. 总主持人 1-2min =====
-  {
-    id: 'toastmaster_host',
-    name: '总主持人 (1-2min)',
-    segments: [
-      genSeg('tm_green', '正常时间', 60, '#4ade80', false),
-      genSeg('tm_yellow', '橙色时间', 30, '#facc15', false),
-      genSeg('tm_red', '警告时间', 30, '#f87171', true),
-    ],
-    createdAt: new Date(), updatedAt: new Date(),
-  },
-  // ===== 8. 嘉宾分享 55-59min (>3min, 黄 60s) =====
-  {
-    id: 'guest_sharing',
-    name: '嘉宾分享 (55-59min)',
-    segments: [
-      genSeg('gs_green', '正常时间', 3300, '#4ade80', false),
-      genSeg('gs_yellow', '橙色时间', 60, '#facc15', false),
-      genSeg('gs_red', '警告时间', 30, '#f87171', true),
-    ],
-    createdAt: new Date(), updatedAt: new Date(),
-  },
-  // ===== 9. 即兴主持人 (每人2min) =====
-  {
-    id: 'table_topics_host',
-    name: '即兴主持人 (每人2min)',
-    segments: [
-      genSeg('tth_green', '准备时间', 90, '#4ade80', false),
-      genSeg('tth_yellow', '橙色时间', 30, '#facc15', false),
-      genSeg('tth_red', '警告时间', 30, '#f87171', true),
-    ],
-    createdAt: new Date(), updatedAt: new Date(),
-  },
-  // ===== 10. 工作坊 25-30min (>3min, 黄 60s) =====
-  {
-    id: 'workshop',
-    name: '工作坊 (25-30min)',
-    segments: [
-      genSeg('ws_green', '正常时间', 1500, '#4ade80', false),
-      genSeg('ws_yellow', '橙色时间', 60, '#facc15', false),
-      genSeg('ws_red', '警告时间', 30, '#f87171', true),
-    ],
-    createdAt: new Date(), updatedAt: new Date(),
-  },
+  mk('table_topics', '即兴演讲', 2),
+  mk('prepared_speech', '备稿演讲', 7),
+  mk('evaluation', '评估', 3),
+  mk('self_intro', '自我介绍', 1),
+  mk('role_intro', '角色介绍', 2),
+  mk('president_opening', '主席开场', 4),
+  mk('toastmaster_host', '总主持人', 2),
+  mk('guest_sharing', '嘉宾分享', 59),
+  mk('table_topics_host', '即兴主持人(每人)', 2),
+  mk('workshop', '工作坊', 30),
 ];
