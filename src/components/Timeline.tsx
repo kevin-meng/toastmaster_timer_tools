@@ -116,6 +116,23 @@ export const TimelineActionsPanel: React.FC<{ selectedDate: string }> = ({ selec
     const zhReport = existing ? existing.report.zh.summary + '\n\n' + existing.report.zh.report : '';
     const enReport = existing ? existing.report.en.summary + '\n\n' + existing.report.en.report : '';
 
+    // 将 Markdown 转为 HTML
+    const renderMD = (text: string) => {
+      let html = text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/^### (.+)$/gm, '<h3 style="font-size:16px;font-weight:700;color:#1f2937;margin:16px 0 8px">$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2 style="font-size:18px;font-weight:700;color:#111827;margin:20px 0 10px;padding-bottom:4px;border-bottom:1px solid #e5e7eb">$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1 style="font-size:22px;font-weight:800;color:#111827;margin:24px 0 12px">$1</h1>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/^\- (.+)$/gm, '<li style="margin-left:16px;color:#374151">$1</li>')
+        .replace(/<\/li>\n<li/g, '</li><li')
+        .replace(/(<li[^>]*>.*<\/li>)/gs, '<ul style="margin:8px 0">$1</ul>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>');
+      return html;
+    };
+
     const html = `<!DOCTYPE html>
 <html lang="zh"><head><meta charset="UTF-8"><title>Timer Report – ${selectedDate}</title>
 <style>
@@ -137,7 +154,7 @@ export const TimelineActionsPanel: React.FC<{ selectedDate: string }> = ({ selec
 <p class="date">${selectedDate} · ${daySessions.length} 项记录 · ${existing ? '<span class="badge ' + (existing.type === 'ai' ? 'ai' : 'manual') + '">' + (existing.type === 'ai' ? 'AI 生成' : '人工编辑') + '</span>' : '手动整理'}</p>
 <h2>📋 计时记录</h2>
 <table><thead><tr><th>#</th><th>演讲者</th><th>组合</th><th style="text-align:right">实际用时</th><th style="text-align:right">预期用时</th><th style="text-align:center">状态</th><th>备注</th></tr></thead><tbody>${rows}</tbody></table>
-${existing ? '<h2>🇨🇳 中文报告</h2><div class="report">' + zhReport.replace(/</g, '&lt;').replace(/\n/g, '<br>') + '</div><h2>🇬🇧 English Report</h2><div class="report">' + enReport.replace(/</g, '&lt;').replace(/\n/g, '<br>') + '</div>' : ''}
+${existing ? '<h2>🇨🇳 中文报告</h2><div class="report">' + renderMD(zhReport) + '</div><h2>🇬🇧 English Report</h2><div class="report">' + renderMD(enReport) + '</div>' : ''}
 <div class="footer">Toastmaster 时间官 · Timer Tools</div>
 </body></html>`;
 
