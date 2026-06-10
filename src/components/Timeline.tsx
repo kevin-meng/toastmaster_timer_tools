@@ -127,8 +127,8 @@ export const TimelineActionsPanel: React.FC<{ selectedDate: string }> = ({ selec
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
         .replace(/^\- (.+)$/gm, '<li>$1</li>')
         .replace(/(<li>.*<\/li>\n?)+/gs, '<ul>$&</ul>')
-        .replace(/\n\n/g, '<br>')
-        .replace(/\n/g, '<br>');
+        .replace(/\n\n/g, '\n')
+        .replace(/\n/g, '');
       return html;
     };
 
@@ -144,7 +144,12 @@ export const TimelineActionsPanel: React.FC<{ selectedDate: string }> = ({ selec
   table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
   th { text-align: left; padding: 6px 10px; font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid #e5e7eb; }
   td { font-size: 12px; }
-  .report { white-space: pre-wrap; font-size: 13px; line-height: 1.7; color: #374151; background: #f9fafb; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+  .report { font-size: 13px; line-height: 1.5; color: #374151; background: #f9fafb; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+  .report p { margin: 0 0 4px; }
+  .report h2 { font-size: 15px; font-weight: 700; color: #1f2937; margin: 12px 0 4px; padding-bottom: 3px; border-bottom: 1px solid #e5e7eb; }
+  .report h3 { font-size: 13px; font-weight: 600; color: #374151; margin: 8px 0 2px; }
+  .report ul { margin: 2px 0 4px; padding-left: 16px; }
+  .report li { margin-bottom: 1px; }
   .badge { display: inline-block; padding: 1px 7px; border-radius: 9999px; font-size: 10px; font-weight: 600; }
   .ai { background: #f3e8ff; color: #9333ea; }
   .manual { background: #fef3c7; color: #d97706; }
