@@ -197,8 +197,8 @@ const TimerDisplay: React.FC = () => {
           </div>
         )}
 
-        {/* 累计用时 */}
-        {state.isRunning && (
+        {/* 累计用时 — 根据当前段 showTime 决定是否显示 */}
+        {state.isRunning && currentSegment?.showTime !== false && (
           <div className="text-gray-900 font-extrabold font-mono transition-all duration-300"
             style={{ fontSize: `${fontSize}px`, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
             {formatTime(state.elapsedTime)}
