@@ -4,7 +4,7 @@ const genSeg = (id: string, name: string, duration: number, color: string, playS
   id, name, duration, color, showTime, playSound, soundType: playSound ? 'bell' : ('default' as any),
 });
 
-// 规则：红色警告段固定 30s；总时长超过 3min 时最后 1min 为黄色段
+// 红段固定 30s；黄段：总时长 ≥ 3min → 60s，< 3min → 30s
 export const DEFAULT_COMBINATIONS: TimingCombination[] = [
   // ===== 1. 即兴演讲 1-2min =====
   {
@@ -28,7 +28,7 @@ export const DEFAULT_COMBINATIONS: TimingCombination[] = [
     ],
     createdAt: new Date(), updatedAt: new Date(),
   },
-  // ===== 3. 点评/评估 2-3min =====
+  // ===== 3. 点评/评估 2-3min（总时长 < 3min 但接近，黄=30s）=====
   {
     id: 'evaluation',
     name: '评估 (2-3min)',
@@ -49,18 +49,18 @@ export const DEFAULT_COMBINATIONS: TimingCombination[] = [
     ],
     createdAt: new Date(), updatedAt: new Date(),
   },
-  // ===== 5. 角色介绍 1-2min =====
+  // ===== 5. 角色介绍 1-2min（总时长 < 3min，黄=30s）=====
   {
     id: 'role_intro',
     name: '角色介绍 (1-2min)',
     segments: [
-      genSeg('ri_green', '正常时间', 60, '#4ade80', false),
+      genSeg('ri_green', '正常时间', 90, '#4ade80', false),
       genSeg('ri_yellow', '橙色时间', 30, '#facc15', false),
       genSeg('ri_red', '警告时间', 30, '#f87171', true),
     ],
     createdAt: new Date(), updatedAt: new Date(),
   },
-  // ===== 6. 主席开场 2-4min (>3min, 黄=60s) =====
+  // ===== 6. 主席开场 2-4min (>=3min, 黄=60s) =====
   {
     id: 'president_opening',
     name: '主席开场 (2-4min)',
