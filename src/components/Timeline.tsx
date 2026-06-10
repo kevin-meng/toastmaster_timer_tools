@@ -212,7 +212,7 @@ const Timeline: React.FC<{ selectedDate: string }> = ({ selectedDate }) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full">
       {/* 标题行 */}
       <div className="flex items-center justify-between mb-8">
         <div>
