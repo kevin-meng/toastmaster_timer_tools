@@ -230,11 +230,19 @@ const Timeline: React.FC<{ selectedDate: string }> = ({ selectedDate }) => {
           <h2 className="text-2xl font-bold text-gray-900">{selectedDate}</h2>
           <p className="text-sm text-gray-500 mt-1">会议计时记录</p>
         </div>
-        <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer select-none">
-          <span>显示已删除</span>
-          <input type="checkbox" checked={showDeleted} onChange={e => setShowDeleted(e.target.checked)} className="sr-only peer" />
-          <div className="w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 relative after:absolute" />
-        </label>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setSortAsc(!sortAsc)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-gray-600 font-medium"
+          >
+            {sortAsc ? '↑ 升序' : '↓ 降序'}
+          </button>
+          <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer select-none">
+            <span>显示已删除</span>
+            <input type="checkbox" checked={showDeleted} onChange={e => setShowDeleted(e.target.checked)} className="sr-only peer" />
+            <div className="w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 relative after:absolute" />
+          </label>
+        </div>
       </div>
 
       {/* 编辑模式 */}
