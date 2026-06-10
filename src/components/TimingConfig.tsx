@@ -30,7 +30,7 @@ const TimingConfig: React.FC = () => {
         duration: 120,
         color: '#facc15',
         showTime: false,
-        playSound: true,
+        playSound: false,
         soundType: 'chime',
       },
       {
