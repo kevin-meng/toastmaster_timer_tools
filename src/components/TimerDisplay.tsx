@@ -51,20 +51,6 @@ const TimerDisplay: React.FC = () => {
     return state.currentCombination.segments[validIndex];
   };
 
-  // 计算当前时间段剩余时间
-  const getRemainingTime = () => {
-    const currentSegment = getCurrentSegment();
-    if (!currentSegment) return 0;
-
-    let totalTime = 0;
-    for (let i = 0; i < state.currentSegmentIndex; i++) {
-      totalTime += state.currentCombination!.segments[i].duration;
-    }
-
-    const timeInCurrentSegment = state.elapsedTime - totalTime;
-    return Math.max(0, currentSegment.duration - timeInCurrentSegment);
-  };
-
   // 播放声音函数 — 使用预加载的 Audio 实例，0 延迟
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
 
