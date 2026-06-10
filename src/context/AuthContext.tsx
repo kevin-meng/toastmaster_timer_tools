@@ -2,8 +2,16 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import api from '../utils/api';
 import { User } from '../types';
 
+const GUEST_USER: User = {
+  id: 0,
+  phone: '',
+  wechat_openid: '',
+  username: '访客用户',
+  is_active: true,
+};
+
 interface AuthContextType {
-  user: User | null;
+  user: User;
   loading: boolean;
   login: (token: string) => Promise<void>;
   logout: () => void;
@@ -14,7 +22,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User>(GUEST_USER);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +37,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           localStorage.removeItem('token');
         }
       }
+      // 无 token 时保持默认访客用户，直接可用
       setLoading(false);
     };
     initAuth();
@@ -42,7 +51,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     localStorage.removeItem('token');
-    setUser(null);
+    setUser(GUEST_USER);
   };
 
   const sendSmsCode = async (phone: string) => {

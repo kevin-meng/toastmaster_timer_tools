@@ -4,7 +4,32 @@ import { useTimerContext } from '../context/TimerContext';
 const TimerDisplay: React.FC = () => {
   const { state, dispatch } = useTimerContext();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 监听容器尺寸变化
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        setContainerSize({
+          w: containerRef.current.clientWidth,
+          h: containerRef.current.clientHeight,
+        });
+      }
+    };
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    if (containerRef.current) observer.observe(containerRef.current);
+    window.addEventListener('resize', updateSize);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateSize);
+    };
+  }, []);
+
+  // 动态字体：同时考虑宽度和高度
+  const fontSize = Math.min(containerSize.w / 4, containerSize.h / 1.5, 480);
 
   // 格式化时间为 mm:ss 格式
   const formatTime = (seconds: number) => {
@@ -43,17 +68,16 @@ const TimerDisplay: React.FC = () => {
   // 播放声音函数 - 3个素材对应3个选项
   const playSound = (soundType: string) => {
     try {
-      // 声音类型到文件路径的映射 - 3个素材对应3个选项
+      // ⚡ 使用压缩后轻量的 M4A 格式，加载更快
       const soundMap: Record<string, string> = {
-        bell: '/sounds/bell.wav',
-        chime: '/sounds/chime.wav',
-        beep: '/sounds/bell_service.wav',
-        alarm: '/sounds/bell_service.wav',
-        default: '/sounds/bell.wav',
-        custom: '/sounds/bell.wav'
+        bell: '/sounds/bell.m4a',
+        chime: '/sounds/chime.m4a',
+        beep: '/sounds/bell_service.m4a',
+        alarm: '/sounds/bell_service.m4a',
+        default: '/sounds/bell.m4a',
+        custom: '/sounds/bell.m4a'
       };
-      
-      // 创建音频对象并播放
+
       const audio = new Audio(soundMap[soundType] || soundMap.default);
       audio.play().catch(err => {
         console.error('Failed to play sound:', err);
@@ -155,29 +179,44 @@ const TimerDisplay: React.FC = () => {
 
   return (
     <div className="w-full h-full relative overflow-hidden">
-      {/* 计时器显示区域 */}
+      {/* 计时器显示区域 — 占满第 3 栏 */}
       <div
-        className="w-full h-full relative overflow-hidden min-h-[calc(100vh-2rem)] rounded-lg shadow-sm cursor-pointer"
+        ref={containerRef}
+        className="w-full flex-1 min-h-[calc(100vh-2rem)] rounded-2xl shadow-lg cursor-pointer flex flex-col items-center justify-center relative overflow-hidden"
         style={{
-          backgroundColor: state.isRunning && currentSegment ? currentSegment.color : 'transparent',
+          backgroundColor: state.isRunning && currentSegment ? currentSegment.color : '#f9fafb',
           transition: 'background-color 0.5s ease'
         }}
         onClick={toggleFullscreen}
       >
-        {/* 计时器内容 */}
-        <div className="absolute inset-0 flex items-center justify-center p-4">
-          {currentSegment && state.showCountdown && (
-            <div className="text-center">
-              <div className="text-white text-6xl md:text-9xl font-bold transition-all duration-300">
-                {formatTime(remainingTime)}
-              </div>
-            </div>
-          )}
-        </div>
-        
+        {/* 未开始时显示提示 */}
+        {!state.isRunning && (
+          <div className="text-gray-400 text-center">
+            <div className="text-6xl mb-4">⏱️</div>
+            <p className="text-lg">选择计时组合并点击开始</p>
+          </div>
+        )}
+
+        {/* 累计用时 */}
+        {state.isRunning && (
+          <div className="text-gray-900 font-extrabold font-mono transition-all duration-300"
+            style={{ fontSize: `${fontSize}px`, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+            {formatTime(state.elapsedTime)}
+          </div>
+        )}
+
+        {/* 当前段名称 */}
+        {state.isRunning && currentSegment && (
+          <div className="absolute bottom-8 left-0 right-0 text-center">
+            <span className="text-white/80 text-lg font-medium bg-black/20 px-4 py-1.5 rounded-full">
+              {currentSegment.name}
+            </span>
+          </div>
+        )}
+
         {/* 全屏提示 */}
         {!isFullscreen && (
-          <div className="absolute bottom-4 right-4 text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded-md">
+          <div className="absolute bottom-4 right-4 text-white/60 text-xs bg-black/30 px-3 py-1.5 rounded-lg">
             点击进入全屏
           </div>
         )}

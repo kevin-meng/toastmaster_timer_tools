@@ -36,8 +36,8 @@ const Contact: React.FC = () => {
           <div className="group bg-gray-50 hover:bg-green-50 border border-gray-200 hover:border-green-200 rounded-xl p-4 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-xl shadow-sm">
-                  💬
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                  <img src="/wechat.svg" alt="WeChat" className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">WeChat</p>
