@@ -70,7 +70,12 @@ export const TimelineActionsPanel: React.FC<{ selectedDate: string }> = ({ selec
   const fmtDate = (d: Date | string) => { const dt = new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`; };
   const hasSessions = state.sessions.filter(s => fmtDate(s.startTime) === selectedDate && !s.deleted).length > 0;
 
-  const handleGenerate = async () => { /* same as before */
+  const handleGenerate = async () => {
+    // 如果已有报告，先确认
+    const existing = getReports().find(r => r.date === selectedDate);
+    if (existing && !window.confirm('已有时间官报告，确定要重新生成吗？之前的报告将被覆盖。\n\n确定：重新生成 | 取消：保留现有报告')) {
+      return;
+    }
     setReportError(''); setGenerating(true);
     const apiKey = getApiKey();
     if (!apiKey) { setReportError('请先在 AI 辅助页面填写 API Key'); setGenerating(false); return; }
@@ -81,7 +86,7 @@ export const TimelineActionsPanel: React.FC<{ selectedDate: string }> = ({ selec
       const prompt = getPromptTemplate().replace(/\{meeting_date\}/g, selectedDate).replace(/\{meeting_data\}/g, meetingData);
       const raw = await callDeepSeekAPI(apiKey, prompt);
       const parsed = parseAIResponse(raw);
-      const r: SavedReport = { id: Date.now().toString(36) + Math.random().toString(36).substring(2, 8), date: selectedDate, type: 'ai', report: parsed, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      const r: SavedReport = { id: existing?.id || Date.now().toString(36) + Math.random().toString(36).substring(2, 8), date: selectedDate, type: 'ai', report: parsed, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       saveReport(r);
       window.dispatchEvent(new CustomEvent('timeline-report-updated', { detail: r }));
     } catch (err: any) { setReportError(err instanceof Error ? err.message : String(err)); }
@@ -230,6 +235,17 @@ const Timeline: React.FC<{ selectedDate: string }> = ({ selectedDate }) => {
       {editMode ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2 space-y-4">
+            {/* Tab 切换：AI 报告 / 人工编辑 */}
+            {aiReport && (
+              <div className="flex bg-white rounded-2xl shadow-sm border border-gray-100 p-1.5 gap-1">
+                <button onClick={() => setEditMode(false)}
+                  className="flex-1 py-2 rounded-xl text-sm font-medium transition-all text-gray-500 hover:text-gray-700"
+                >🤖 AI 生成报告</button>
+                <button
+                  className="flex-1 py-2 rounded-xl text-sm font-medium transition-all bg-blue-600 text-white shadow-sm"
+                >✏️ 人工编辑</button>
+              </div>
+            )}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">🇨🇳 中文报告</h3>
               <textarea value={editZh} onChange={e => setEditZh(e.target.value)} rows={12} className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y leading-relaxed" />
