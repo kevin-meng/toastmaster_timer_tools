@@ -409,7 +409,7 @@ function App() {
         </div>
       </aside>
 
-      {/* ===== 第 2 栏：设置面板（始终显示，不受第 1 栏折叠影响）===== */}
+      {/* ===== 第 2 栏：设置面板 ===== */}
       <div className="hidden md:flex flex-col bg-gray-50 border-r border-gray-100 overflow-y-auto w-80">
         <div className="px-4 py-3 border-b border-gray-100 bg-white/60">
           <h3 className="text-sm font-semibold text-gray-700">
@@ -423,8 +423,8 @@ function App() {
         {renderPanel()}
       </div>
 
-      {/* 移动端：面板抽屉 */}
-      {mobileMenuOpen && (
+      {/* 移动端：第 2 栏以浮层面板展示 */}
+      {currentPage !== 'timer' && mobileMenuOpen && (
         <div className="md:hidden fixed inset-x-0 top-[65px] bottom-0 z-45 bg-gray-50 overflow-y-auto">
           <div className="py-2">{renderPanel()}</div>
         </div>
@@ -432,6 +432,10 @@ function App() {
 
       {/* ===== 第 3 栏：主内容 ===== */}
       <main className="flex-1 transition-all duration-300 overflow-auto">
+        {/* 移动端计时页面同时展示第 2 栏（计时设置）在第 3 栏顶部 */}
+        <div className="md:hidden">
+          {!mobileMenuOpen && renderPanel()}
+        </div>
         <div className={currentPage === 'timer' ? '' : 'hidden'}>
           <TimerDisplay />
         </div>
